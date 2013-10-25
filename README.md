@@ -9,6 +9,10 @@ Description
 
 **JPAK** is a multi-use Javascript Package System, developed for loading much files at once with only one package.
 
+For what this can be used?
+========
+
+**JPAK** can be used for much things. From game assets to webpage assets. It makes easier to preload all images and resources that you need for website.
 
 What is done
 ========
@@ -19,6 +23,7 @@ What is done
 TODO
 ========
 *   Load files from JPAK only when needed. A.K.A. - Fetch only the necessary parts from jpak file.
+*   Load Progress Notification
 
 How to use it
 ========
