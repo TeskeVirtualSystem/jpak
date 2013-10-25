@@ -97,6 +97,11 @@ Lists the content of the path
 
 Arguments: 
 *   `path`      -> The path you want to list
-*   `returns`   -> Returns an object { "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }
+*   `returns`   -> Returns an object `{ "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }`
 
+
+Example
+========
+
+You can check the folder `test` for see a working simple example that loads a Image, Javascript and a HTML file to the page.
 
