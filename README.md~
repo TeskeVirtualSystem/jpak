@@ -107,7 +107,6 @@ Arguments:
 
 Events:
 ========
-
 *   `onload`    ->  Executed when the **jpackloader** ends loading the JPAK file
 *   `onprogress`->  Executed when new progress is available. It has one object argument `{"loaded":loadedbytes,"total":totalbytes,"percent": percentComplete}`
 

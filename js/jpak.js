@@ -70,11 +70,24 @@ JPAK.jpakloader.prototype.CacheLoad     =   function(path)  {
 //  Loads the jpak file and process it
 JPAK.jpakloader.prototype.Load = function() {
     if(this.jpakfile !== undefined) {
+        // _this is used to reference the jpakloader object
         var _this = this;
+        
+        //  Lets create a new XMLHttpRequest to load the jpak
         var xhr = new XMLHttpRequest();
         
         xhr.open('GET', this.jpakfile, true);
-        xhr.responseType = 'arraybuffer';
+        xhr.responseType = 'arraybuffer';       //  We want an ArrayBuffer for processing
+        
+        //  The On Progress request. For now it only does stuff if there is a hooked onprogress jpakloader event.
+        xhr.onprogress = function(e)    {
+            if (e.lengthComputable && _this.onprogress != undefined)     {  
+                var percentComplete = (( (e.loaded / e.total)*10000 ) >> 0)/100;  // Rounded percent to two decimal
+                    _this.onprogress({"loaded":e.loaded,"total":e.total,"percent": percentComplete});                
+            }   
+        }
+        
+        //  The onload function. This parses the JPAK and after loading the filetable it calls the onload event of jpakloader
         xhr.onload = function(e) {
             if (this.status == 200) {
                 var data = this.response;
@@ -92,6 +105,7 @@ JPAK.jpakloader.prototype.Load = function() {
                 }
             }
         };
+        //  Send the request
         xhr.send();  
     }else
         console.log("JPAK::jpakloader - No file to load!");
