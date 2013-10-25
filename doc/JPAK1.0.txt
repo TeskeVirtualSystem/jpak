@@ -1,0 +1,41 @@
+     _ ____   _    _  __        _   ___  
+    | |  _ \ / \  | |/ / __   _/ | / _ \ 
+ _  | | |_) / _ \ | ' /  \ \ / / || | | |
+| |_| |  __/ ___ \| . \   \ V /| || |_| |
+ \___/|_| /_/   \_\_|\_\   \_/ |_(_)___/ 
+                                         
+Multiuse Javascript Package 
+By: Lucas Teske
+https://github.com/racerxdl/jpak
+
+JPAK v1.0 Specification File
+
+This file will describe how JPAK v1.0 works.
+The JPAK it's a very simple package format for using on the web. For Easy-to-use stuff, the file table is a JSON with struct described below:
+
+direntry    =   { 
+                    "name"          :   DIRNAME,                //  Ndame of this folder
+                    "path"          :   DIRPATH,                //  Path for this folder
+                    "numfiles"      :   DIRNUMFILES,            //  Number of files in root of this folder
+                    "directories"   :   DIRSUBDIRECTORIES,      //  It's an array [] with directory objects like direntry
+                    "files"         :   DIRFILES                //  It's an array [] with file objects like fileentry
+                };
+           
+fileentry   =   {   
+                    "name"          :   FILENAME,               //  File Name
+                    "path"          :   FILEPATH,               //  File Path
+                    "offset"        :   FILEOFFSET,             //  Absolute offset in the jpak file
+                    "size"          :   FILESIZE                //  The file size
+                }
+
+The JPAK file is structured like described below:
+
+Y   ->  End of data of the files
+Z   ->  End of JSON File Table
+
+START           END         Description
+0x0     ->      0x5         JPAK1 Magic Number
+0x5     ->      0xD         Padding (0x00)
+0xD     ->      0xY         Start of Files Data
+0xY     ->      0xZ         JSON File Table
+0xZ     ->      END         Unsigned Integer that tells the start offset of JSON File Table
