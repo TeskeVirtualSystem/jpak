@@ -93,7 +93,7 @@ JPAK.jpakloader.prototype.Load = function() {
                 var data = this.response;
                 var MagicNumber = u8as(new Uint8Array(data.slice(0,5)));
                 if(MagicNumber == "JPAK1")  {
-                    console.log("JPAK::jpackloader - Loaded file "+_this.jpakfile+" successfully. JPAK1 Format");
+                    console.log("JPAK::jpakloader - Loaded file "+_this.jpakfile+" successfully. JPAK1 Format");
                     var filetableoffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
                     var filetable = new Uint8Array(data.slice(filetableoffset,data.byteLength-4));
                     filetable = JSON.parse(u8as(filetable));
@@ -102,8 +102,21 @@ JPAK.jpakloader.prototype.Load = function() {
                     _this.dataloaded = true;
                     if(_this.onload != undefined)   
                         _this.onload();
+                }else{
+                    console.log("JPAK::jpakloader - Error loading file "+_this.jpakfile+" (8000): Wrong File Magic. Expected JPAK1 got "+MagicNumber);
+                    if(_this.onerror != undefined)
+                        _this.onerror({"text": "Wrong File Magic. Expected JPAK1 got "+MagicNumber, "errorcode" : 8000}); 
                 }
             }
+        };
+        xhr.onreadystatechange = function (aEvt) {
+            if (this.readyState == 4) {
+                if(this.status != 200)   {
+                    console.log("JPAK::jpakloader - Error loading file "+_this.jpakfile+" ("+this.status+"): "+this.statusText);
+                    if(_this.onerror != undefined)
+                        _this.onerror({"text": this.statusText, "errorcode": this.status});
+                }
+          }
         };
         //  Send the request
         xhr.send();  
@@ -173,7 +186,7 @@ JPAK.jpakloader.prototype.GetFile = function(path, type)  {
     if(file != undefined && cache == undefined)  { 
         //  Add it to file cache
         var blob = new Blob([new Uint8Array(this.jpakdata.slice(file.offset,file.offset+file.size)).buffer], { "type":type});
-        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob)});
+        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : this.jpakdata.slice(file.offset,file.offset+file.size)} );
         return blob;
     }else if(cache != undefined)
         return cache.blob;
@@ -192,5 +205,23 @@ JPAK.jpakloader.prototype.GetFileURL = function(path, type) {
             return "about:blank"; //    Dunno what to return here
     }else
         return cache.url;
+};
+
+//  Returns an arraybuffer with file content. It looks in the cache for already loaded files.
+JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
+    var file = this.FindFileEntry(path);
+    type = type || 'application/octet-binary';
+    var cache = this.CacheLoad(path);
+    
+    if(file != undefined && cache == undefined)  { 
+        //  Add it to file cache
+        var blob = new Blob([new Uint8Array(this.jpakdata.slice(file.offset,file.offset+file.size)).buffer], { "type":type});
+        var arraybuffer = this.jpakdata.slice(file.offset,file.offset+file.size);
+        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : arraybuffer});
+        return arraybuffer;
+    }else if(cache != undefined)
+        return cache.arraybuffer;
+        
+    return undefined;
 };
 

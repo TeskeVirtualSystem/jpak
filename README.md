@@ -110,6 +110,13 @@ Events:
 
 *   `onload`    ->  Executed when the **jpackloader** ends loading the JPAK file
 *   `onprogress`->  Executed when new progress is available. It has one object argument `{"loaded":loadedbytes,"total":totalbytes,"percent": percentComplete}`
+*   `onerror`   ->  Executed when an error ocurred.  It has one object argument `{"text": errormessage, "errorcode": errorcode}` - The Error Code can be HTML error or `jpakloader` specific error.
+
+JPAK Loader Error Codes:
+========
+
+*   100->600    -   HTML Status Code. Consult **rfc2616** for details.
+*   8000        -   Wrong file magic
 
 Example
 ========
