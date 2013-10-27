@@ -40,6 +40,9 @@ Array.prototype.clean = function(deleteValue) {
 /*  Start of JPAK Class Stuff   */
 var JPAK = function()   {};
 
+// Enable this to show Debug Messages
+JPAK.ShowMessages = false;
+
 // Auxiliary functions
 //  Convert Unsigned Int 8 Array Buffer to String 
 JPAK.Uint8ArrayToString = function(uintArray) {
@@ -105,6 +108,10 @@ JPAK.ArrayBufferToBase64 = function(arrayBuffer)  {
   return base64
 };
 
+JPAK.log = function(msg)    {
+    if(JPAK.ShowMessages)
+        console.log(msg);
+}
 
 // JPAKLoader
 JPAK.jpakloader = function(parameters)  {
@@ -153,7 +160,7 @@ JPAK.jpakloader.prototype.Load = function() {
                 var data = this.response;
                 var MagicNumber = u8as(new Uint8Array(data.slice(0,5)));
                 if(MagicNumber == "JPAK1")  {
-                    console.log("JPAK::jpakloader - Loaded file "+_this.jpakfile+" successfully. JPAK1 Format");
+                    JPAK.log("JPAK::jpakloader - Loaded file "+_this.jpakfile+" successfully. JPAK1 Format");
                     var filetableoffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
                     var filetable = new Uint8Array(data.slice(filetableoffset,data.byteLength-4));
                     filetable = JSON.parse(u8as(filetable));
@@ -163,7 +170,7 @@ JPAK.jpakloader.prototype.Load = function() {
                     if(_this.onload != undefined)   
                         _this.onload();
                 }else{
-                    console.log("JPAK::jpakloader - Error loading file "+_this.jpakfile+" (8000): Wrong File Magic. Expected JPAK1 got "+MagicNumber);
+                    JPAK.log("JPAK::jpakloader - Error loading file "+_this.jpakfile+" (8000): Wrong File Magic. Expected JPAK1 got "+MagicNumber);
                     if(_this.onerror != undefined)
                         _this.onerror({"text": "Wrong File Magic. Expected JPAK1 got "+MagicNumber, "errorcode" : 8000}); 
                 }
@@ -172,7 +179,7 @@ JPAK.jpakloader.prototype.Load = function() {
         xhr.onreadystatechange = function (aEvt) {
             if (this.readyState == 4) {
                 if(this.status != 200)   {
-                    console.log("JPAK::jpakloader - Error loading file "+_this.jpakfile+" ("+this.status+"): "+this.statusText);
+                    JPAK.log("JPAK::jpakloader - Error loading file "+_this.jpakfile+" ("+this.status+"): "+this.statusText);
                     if(_this.onerror != undefined)
                         _this.onerror({"text": this.statusText, "errorcode": this.status});
                 }
@@ -261,8 +268,10 @@ JPAK.jpakloader.prototype.GetFileURL = function(path, type) {
         var blob = this.GetFile(path, type);
         if(blob != undefined)   
             return URL.createObjectURL(blob);   
-        else
+        else{
+            JPAK.log("Error: Cannot find file \""+path+"\"");   
             return "about:blank"; //    Dunno what to return here
+        }
     }else
         return cache.url;
 };
@@ -281,7 +290,8 @@ JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
         return arraybuffer;
     }else if(cache != undefined)
         return cache.arraybuffer;
-        
+    
+    JPAK.log("Error: Cannot find file \""+path+"\"");    
     return undefined;
 };
 //  Returns an arraybuffer with file content. It looks in the cache for already loaded files.
