@@ -37,17 +37,76 @@ Array.prototype.clean = function(deleteValue) {
   return this;
 };
 
-/*  Convert Unsigned Int 8 Array Buffer to String   */
-function u8as(d)   {
-    var o = "";
-    for(var i=0;i<d.byteLength;i++)  
-        o += String.fromCharCode(d[i]);
-    return o;
-}
-
 /*  Start of JPAK Class Stuff   */
 var JPAK = function()   {};
 
+// Auxiliary functions
+//  Convert Unsigned Int 8 Array Buffer to String 
+JPAK.Uint8ArrayToString = function(uintArray) {
+    var o = "";
+    for(var i=0;i<uintArray.byteLength;i++)  
+        o += String.fromCharCode(uintArray[i]);
+    return o;
+}
+
+var u8as = JPAK.Uint8ArrayToString; //  Provided for compatibility
+
+JPAK.Base64_Encoding = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+// Modified version from https://gist.github.com/jonleighton/958841
+JPAK.ArrayBufferToBase64 = function(arrayBuffer)  {
+  var base64    = ''
+
+  var bytes         = new Uint8Array(arrayBuffer)
+  var byteLength    = bytes.byteLength
+  var byteRemainder = byteLength % 3
+  var mainLength    = byteLength - byteRemainder
+
+  var a, b, c, d
+  var chunk
+
+  // Main loop deals with bytes in chunks of 3
+  for (var i = 0; i < mainLength; i = i + 3) {
+    // Combine the three bytes into a single integer
+    chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2]
+
+    // Use bitmasks to extract 6-bit segments from the triplet
+    a = (chunk & 16515072) >> 18 // 16515072 = (2^6 - 1) << 18
+    b = (chunk & 258048)   >> 12 // 258048   = (2^6 - 1) << 12
+    c = (chunk & 4032)     >>  6 // 4032     = (2^6 - 1) << 6
+    d = chunk & 63               // 63       = 2^6 - 1
+
+    // Convert the raw binary segments to the appropriate ASCII encoding
+    base64 += JPAK.Base64_Encoding[a] + JPAK.Base64_Encoding[b] + JPAK.Base64_Encoding[c] + JPAK.Base64_Encoding[d]
+  }
+
+  // Deal with the remaining bytes and padding
+  if (byteRemainder == 1) {
+    chunk = bytes[mainLength]
+
+    a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2
+
+    // Set the 4 least significant bits to zero
+    b = (chunk & 3)   << 4 // 3   = 2^2 - 1
+
+    base64 += JPAK.Base64_Encoding[a] + JPAK.Base64_Encoding[b] + '=='
+  } else if (byteRemainder == 2) {
+    chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
+
+    a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10
+    b = (chunk & 1008)  >>  4 // 1008  = (2^6 - 1) << 4
+
+    // Set the 2 least significant bits to zero
+    c = (chunk & 15)    <<  2 // 15    = 2^4 - 1
+
+    base64 += JPAK.Base64_Encoding[a] + JPAK.Base64_Encoding[b] + JPAK.Base64_Encoding[c] + '='
+  }
+
+  return base64
+};
+
+
+// JPAKLoader
 JPAK.jpakloader = function(parameters)  {
     if(parameters !== undefined)    {
         this.jpakfile = parameters.file;
@@ -55,6 +114,7 @@ JPAK.jpakloader = function(parameters)  {
     }
 };
 
+// Variables
 JPAK.jpakloader.prototype.dataloaded    =   false;      //  Set to true, when file is loaded
 JPAK.jpakloader.prototype.filecache     =   [];         //  The cached files that we loaded
 
@@ -224,5 +284,44 @@ JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
         
     return undefined;
 };
+//  Returns an arraybuffer with file content. It looks in the cache for already loaded files.
+JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
+    var file = this.FindFileEntry(path);
+    type = type || 'application/octet-binary';
+    var cache = this.CacheLoad(path);
+    
+    if(file != undefined && cache == undefined)  { 
+        //  Add it to file cache
+        var blob = new Blob([new Uint8Array(this.jpakdata.slice(file.offset,file.offset+file.size)).buffer], { "type":type});
+        var arraybuffer = this.jpakdata.slice(file.offset,file.offset+file.size);
+        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : arraybuffer});
+        return arraybuffer;
+    }else if(cache != undefined)
+        return cache.arraybuffer;
+        
+    return undefined;
+};
 
+//  Returns an Base64 Encoded File Content. It looks in the cache for already loaded files.
+JPAK.jpakloader.prototype.GetBase64File = function(path, type) {
+    var filedata = this.GetFileArrayBuffer(path, type);
+    if(filedata == undefined)
+        return undefined;
+    
+    return JPAK.ArrayBufferToBase64(filedata);
+};
 
+//  Returns an HTML Data URI with File Content. It looks in the cache for already loaded files.
+//  Using HTML Data URI for Images, you can hide the load process from chrome Network Inspector
+//  I didnt find any place that you can find DataURI File
+JPAK.jpakloader.prototype.GetHTMLDataURIFile = function(path, type, encoding) {
+    var b64 = this.GetBase64File(path, type);
+    // HTML Data URI Format: data:[<MIME-type>][;charset=<encoding>][;base64],<data>
+    if(b64 === undefined)
+        return undefined
+        
+    if(encoding !== undefined)
+        return "data:"+type+";charset="+encoding+";base64,"+b64;
+    else
+        return "data:"+type+";base64,"+b64;
+};

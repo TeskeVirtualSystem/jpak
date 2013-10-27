@@ -20,6 +20,8 @@ What is done
 *   Python Packer
 *   JPAK 1.0 Specification file
 *   Load progress event
+*   Get file as Base64
+*   Get file as HTML Data URI (for hide from Network Requests)
 
 TODO
 ========
@@ -104,6 +106,65 @@ Lists the content of the path
 Arguments: 
 *   `path`      -> The path you want to list
 *   `returns`   -> Returns an object `{ "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }`
+
+```javascript
+jpakloader.GetFile(path, type)
+```
+
+Return a blob of the file
+
+Arguments: 
+*   `path`      -> The file path to get
+*   `type`      -> The mime type. Defaults to  **application/octet-binary**
+*   `returns`   -> Returns an blob
+
+```javascript
+jpakloader.GetFileURL(path, type)
+```
+
+Return a Blob URL to embed as resource.
+
+Arguments: 
+*   `path`      -> The file path to get
+*   `type`      -> The mime type. Defaults to  **application/octet-binary**
+*   `returns`   -> Returns an string containing the Blob Data URL
+
+```javascript
+jpakloader.GetFileArrayBuffer(path, type)
+```
+
+Return an ArrayBuffer with contents of the file
+
+Arguments: 
+*   `path`      -> The file path to get
+*   `type`      -> The mime type. Not used directly for this function, but for cache. Defaults to  **application/octet-binary**
+*   `returns`   -> Returns an ArrayBuffer with contents of the file
+
+
+
+```javascript
+jpakloader.GetBase64File(path, type)
+```
+
+Return a Base64 Encoded Data from the File
+
+Arguments: 
+*   `path`      -> The file path to get
+*   `type`      -> The mime type. Not used directly for this function, but for cache. Defaults to  **application/octet-binary**
+*   `returns`   -> Returns an string of Base64 Encoded data.
+
+```javascript
+jpakloader.GetHTMLDataURIFile(path, type)
+```
+
+Return a HTML Data URI to embed as resource.
+This is useful if you want to hide the image load process inside the script, as the browser doesn`t make network requests.
+
+Arguments: 
+*   `path`      -> The file path to get
+*   `type`      -> The mime type. Defaults to  **application/octet-binary**
+*   `encoding`  -> The Encoding of the file. *Optional*
+*   `returns`   -> Returns an string of HTML Data URI in format: `data:[<MIME-type>][;charset=<encoding>][;base64],<data>`
 
 Events:
 ========
