@@ -22,7 +22,7 @@ What is done
 *   Load progress event
 *   Get file as Base64
 *   Get file as HTML Data URI (for hide from Network Requests)
-*   GZIP Decompress Support, forked from jsxgraph/jsxgraph
+*   GZIP Decompress Support, forked from https://github.com/jsxgraph/jsxgraph/
 
 TODO
 ========
@@ -184,7 +184,7 @@ JPAK Loader Error Codes:
 GZIP Support:
 ========
 
-The GZIP Decompress support is a modified version of **zip.js** from jsxgraph/jsxgraph project. For now, the default behaviour of `jpakloader` is to check the `compressed` flag at file entry. If its true, it tryes to decompress the file. 
+The GZIP Decompress support is a modified version of **zip.js** from https://github.com/jsxgraph/jsxgraph/ project. For now, the default behaviour of `jpakloader` is to check the `compressed` flag at file entry. If its true, it tryes to decompress the file. 
 
 For compatible GZIPPing a file on Python you can do:
 ```python
