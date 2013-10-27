@@ -52,6 +52,14 @@ JPAK.Uint8ArrayToString = function(uintArray) {
     return o;
 }
 
+JPAK.String2ArrayBuffer = function(str)   {
+    var buf = new ArrayBuffer(str.length);
+    var bufView = new Uint8Array(buf);
+    for (var i=0, strLen=str.length; i<strLen; i++) 
+        bufView[i] = str.charCodeAt(i) & 0xFF;
+    return buf;
+};
+
 var u8as = JPAK.Uint8ArrayToString; //  Provided for compatibility
 
 JPAK.Base64_Encoding = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -252,7 +260,10 @@ JPAK.jpakloader.prototype.GetFile = function(path, type)  {
     
     if(file != undefined && cache == undefined)  { 
         //  Add it to file cache
-        var blob = new Blob([new Uint8Array(this.jpakdata.slice(file.offset,file.offset+file.size)).buffer], { "type":type});
+        var dataslice = this.jpakdata.slice(file.offset,file.offset+file.size);
+        if(file.compressed !== undefined && file.compressed)
+            dataslice = JPAK.GZIP.decompress(dataslice);
+        var blob = new Blob([new Uint8Array(dataslice).buffer], { "type":type});
         this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : this.jpakdata.slice(file.offset,file.offset+file.size)} );
         return blob;
     }else if(cache != undefined)
@@ -284,31 +295,16 @@ JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
     
     if(file != undefined && cache == undefined)  { 
         //  Add it to file cache
-        var blob = new Blob([new Uint8Array(this.jpakdata.slice(file.offset,file.offset+file.size)).buffer], { "type":type});
-        var arraybuffer = this.jpakdata.slice(file.offset,file.offset+file.size);
+        var dataslice = this.jpakdata.slice(file.offset,file.offset+file.size);
+        if(file.compressed !== undefined && file.compressed)
+            dataslice = JPAK.GZIP.decompress(dataslice);
+        var blob = new Blob([new Uint8Array(dataslice).buffer], { "type":type});
         this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : arraybuffer});
-        return arraybuffer;
+        return dataslice;
     }else if(cache != undefined)
         return cache.arraybuffer;
     
     JPAK.log("Error: Cannot find file \""+path+"\"");    
-    return undefined;
-};
-//  Returns an arraybuffer with file content. It looks in the cache for already loaded files.
-JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
-    var file = this.FindFileEntry(path);
-    type = type || 'application/octet-binary';
-    var cache = this.CacheLoad(path);
-    
-    if(file != undefined && cache == undefined)  { 
-        //  Add it to file cache
-        var blob = new Blob([new Uint8Array(this.jpakdata.slice(file.offset,file.offset+file.size)).buffer], { "type":type});
-        var arraybuffer = this.jpakdata.slice(file.offset,file.offset+file.size);
-        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : arraybuffer});
-        return arraybuffer;
-    }else if(cache != undefined)
-        return cache.arraybuffer;
-        
     return undefined;
 };
 

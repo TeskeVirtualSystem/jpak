@@ -22,11 +22,12 @@ What is done
 *   Load progress event
 *   Get file as Base64
 *   Get file as HTML Data URI (for hide from Network Requests)
+*   GZIP Decompress Support, forked from jsxgraph/jsxgraph
 
 TODO
 ========
 *   Load files from JPAK only when needed. A.K.A. - Fetch only the necessary parts from jpak file.
-
+*   Add option to compress files on packing.
 
 How to use it
 ========
@@ -178,6 +179,26 @@ JPAK Loader Error Codes:
 
 *   100->600    -   HTML Status Code. Consult **RFC-2616** for details.
 *   8000        -   Wrong file magic
+
+
+GZIP Support:
+========
+
+The GZIP Decompress support is a modified version of **zip.js** from jsxgraph/jsxgraph project. For now, the default behaviour of `jpakloader` is to check the `compressed` flag at file entry. If its true, it tryes to decompress the file. 
+
+For compatible GZIPPing a file on Python you can do:
+```python
+import zlib
+f = open("uncompressed", "rb")
+data = f.read()
+f.close()
+data = zlib.compress(data, 9)   # Level 9 is important
+f = open("compressed", "wb")
+f.write(data)
+f.close()
+```
+
+*   TODO on Tools: Add option to compress files on packer.py
 
 Example
 ========

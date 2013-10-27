@@ -41,7 +41,8 @@ if len(sys.argv) > 1:
             for dir in dirs:
                 lastentry["directories"][dir] = { "name" : dir, "path" : "/%s" % os.path.join(relroot,dir), "directories" : {}, "files" : {}, "numfiles" : 0 }
             for file in files:
-                lastentry["files"][file] = { "name" : file, "path" : "/%s" % os.path.join(relroot,file) }
+                # TODO: Compress files if needed/want
+                lastentry["files"][file] = { "name" : file, "path" : "/%s" % os.path.join(relroot,file), "compressed" : False }
                 lastentry["numfiles"] += 1
                 offset, size = AddToVolume(os.path.join(root,file), volume)
                 lastentry["files"][file]["offset"] = offset
