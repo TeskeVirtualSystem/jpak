@@ -7,12 +7,12 @@
 Description
 ========
 
-**JPAK** is a multi-use Javascript Package System, developed for loading much files at once with only one package.
+**JPAK** is a multi-use Javascript Package System, developed for loading several files at once with only one package.
 
 For what this can be used?
 ========
 
-**JPAK** can be used for much things. From game assets to webpage assets. It makes easier to preload all images and resources that you need for website.
+**JPAK** can be used for many things. From game assets to webpage assets. It makes easier to preload all images and resources that you need for website.
 
 What is done
 ========
@@ -47,13 +47,13 @@ Package.onload = function()   {
 };
 ```
 
-After that, you need to call the load function, to start loading the file. At the end of processing, it will execute the onload function (if its defined).
+After that, you need to call the load function, to start loading the file. At the end of processing, it will execute the `onload` function (if it has been defined).
 
 ```javascript
 Package.Load();
 ```
 
-By that, you are ready to use it to get the files. I will show two examples of how you can manage files. One image, and one text.
+By that, you are ready to use it and get the files. I will show two examples of how you can manage files. One image, and one text.
 
 You have two functions to get files.
 
@@ -92,7 +92,7 @@ reader.readAsText(testdothtml);
 Class
 ========
 
-The **JPAK** script has a few features. It caches the already loaded blobs, for memory reduce for example.
+The **JPAK** script has a few features. It caches the already loaded blobs to reduce the memory load, for example.
 Here are few functions for now:
 
 ```javascript
@@ -110,16 +110,16 @@ Events:
 
 *   `onload`    ->  Executed when the **jpackloader** ends loading the JPAK file
 *   `onprogress`->  Executed when new progress is available. It has one object argument `{"loaded":loadedbytes,"total":totalbytes,"percent": percentComplete}`
-*   `onerror`   ->  Executed when an error ocurred.  It has one object argument `{"text": errormessage, "errorcode": errorcode}` - The Error Code can be HTML error or `jpakloader` specific error.
+*   `onerror`   ->  Executed when an error has ocurred.  It has one object argument `{"text": errormessage, "errorcode": errorcode}` - The Error Code can be HTML error or `jpakloader` specific error.
 
 JPAK Loader Error Codes:
 ========
 
-*   100->600    -   HTML Status Code. Consult **rfc2616** for details.
+*   100->600    -   HTML Status Code. Consult **RFC-2616** for details.
 *   8000        -   Wrong file magic
 
 Example
 ========
 
-You can check the folder `test` for see a working simple example that loads a Image, Javascript and a HTML file to the page.
+You can check the folder `test` for see a working simple example that loads an `image`, `javascript` and a `HTML` file to the page.
 
