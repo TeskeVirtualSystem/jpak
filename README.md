@@ -154,7 +154,7 @@ Arguments:
 *   `returns`   -> Returns an string of Base64 Encoded data.
 
 ```javascript
-jpakloader.GetHTMLDataURIFile(path, type)
+jpakloader.GetHTMLDataURIFile(path, type, encoding)
 ```
 
 Return a HTML Data URI to embed as resource.
