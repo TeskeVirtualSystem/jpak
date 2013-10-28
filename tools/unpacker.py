@@ -21,7 +21,7 @@ if len(sys.argv) > 1:
         mkdir(os.path.splitext(os.path.basename(packfile))[0] + "/")
         volume = open(packfile, "rb")
         filetable = GetFileTable(volume)
-        ProcessFolder(filetable, volume, root)
+        ProcessFolder(filetable, volume, "")
         volume.close()
 else:
     print '''This python script will take a jpak as argument, and generates a folder  with same name of the file, with contents extracted. 
