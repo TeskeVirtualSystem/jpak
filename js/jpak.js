@@ -127,11 +127,9 @@ JPAK.jpakloader = function(parameters)  {
         this.jpakfile = parameters.file;
         this.loadall  = parameters.loadall || false;    //  TODO: Implement the fetch-on-need feature
     }
+    this.filecache = [];
+    this.dataloaded = false;
 };
-
-// Variables
-JPAK.jpakloader.prototype.dataloaded    =   false;      //  Set to true, when file is loaded
-JPAK.jpakloader.prototype.filecache     =   [];         //  The cached files that we loaded
 
 //  Searches a file on the cache
 JPAK.jpakloader.prototype.CacheLoad     =   function(path)  {
@@ -264,7 +262,7 @@ JPAK.jpakloader.prototype.GetFile = function(path, type)  {
         if(file.compressed !== undefined && file.compressed)
             dataslice = JPAK.GZIP.decompress(dataslice);
         var blob = new Blob([new Uint8Array(dataslice).buffer], { "type":type});
-        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : this.jpakdata.slice(file.offset,file.offset+file.size)} );
+        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : dataslice} );
         return blob;
     }else if(cache != undefined)
         return cache.blob;
@@ -299,7 +297,7 @@ JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
         if(file.compressed !== undefined && file.compressed)
             dataslice = JPAK.GZIP.decompress(dataslice);
         var blob = new Blob([new Uint8Array(dataslice).buffer], { "type":type});
-        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : arraybuffer});
+        this.filecache.push({"path":path,"type":type,"blob":blob,"url":URL.createObjectURL(blob), "arraybuffer" : dataslice});
         return dataslice;
     }else if(cache != undefined)
         return cache.arraybuffer;
