@@ -185,6 +185,7 @@ GZIP Support:
 ========
 
 The GZIP Decompress support is a modified version of **zip.js** from https://github.com/jsxgraph/jsxgraph/ project. For now, the default behaviour of `jpakloader` is to check the `compressed` flag at file entry. If its true, it tryes to decompress the file. 
+For **zip.js** license, consult the file or the JSXGraph Github
 
 For compatible GZIPPing a file on Python you can do:
 ```python
