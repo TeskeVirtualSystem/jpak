@@ -23,11 +23,14 @@ What is done
 *   Get file as Base64
 *   Get file as HTML Data URI (for hide from Network Requests)
 *   GZIP Decompress Support, forked from https://github.com/jsxgraph/jsxgraph/
+*	Simple C# Windows Tool for Exploring and Export Content from JPAK Files
 
 TODO
 ========
 *   Load files from JPAK only when needed. A.K.A. - Fetch only the necessary parts from jpak file.
 *   Add option to compress files on packing.
+*	More stuff on JPAK Explorer for Windows
+*	JPAK Explorer for Linux
 
 How to use it
 ========

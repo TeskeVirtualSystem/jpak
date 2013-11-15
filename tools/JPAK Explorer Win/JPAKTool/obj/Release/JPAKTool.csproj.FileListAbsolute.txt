@@ -1,0 +1,7 @@
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\bin\Release\Newtonsoft.Json.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\bin\Release\JPAKTool.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\bin\Release\JPAKTool.pdb
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Release\JPAK.FileImages.resources
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Release\JPAKTool.csproj.GenerateResource.Cache
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Release\JPAKTool.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Release\JPAKTool.pdb
