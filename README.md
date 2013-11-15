@@ -204,6 +204,11 @@ f.close()
 
 *   TODO on Tools: Add option to compress files on packer.py
 
+C# JPAK Tool:
+========
+
+A C# Version of JPAK Tool is available. There is many things todo in there, but it works for the JPAK Explorer. The images used in thumbnail is from Crystal Clear, can be found at http://commons.wikimedia.org/wiki/Crystal_Clear and its licensed under LGPL
+
 Example
 ========
 
