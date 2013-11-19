@@ -1,0 +1,8 @@
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\bin\Debug\JPAKTool.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\bin\Debug\JPAKTool.pdb
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Debug\JPAKTool.csprojResolveAssemblyReference.cache
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Debug\JPAKTool.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Debug\JPAKTool.pdb
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\bin\Debug\Newtonsoft.Json.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Debug\JPAK.FileImages.resources
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAKTool\obj\Debug\JPAKTool.csproj.GenerateResource.Cache

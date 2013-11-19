@@ -1,0 +1,11 @@
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\bin\Release\Newtonsoft.Json.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\bin\Release\JPAK Explorer Win.exe
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\bin\Release\JPAK Explorer Win.pdb
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\bin\Release\JPAKTool.dll
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\bin\Release\JPAKTool.pdb
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\obj\Release\JPAK Explorer Win.csprojResolveAssemblyReference.cache
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\obj\Release\JPAK.Explorer.resources
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\obj\Release\JPAK.Properties.Resources.resources
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\obj\Release\JPAK Explorer Win.csproj.GenerateResource.Cache
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\obj\Release\JPAK Explorer Win.exe
+C:\Users\lucas\Documents\GitHub\jpak\tools\JPAK Explorer Win\JPAK Explorer Win\obj\Release\JPAK Explorer Win.pdb
