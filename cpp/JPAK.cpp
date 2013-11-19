@@ -8,12 +8,13 @@
 #include "JPAK.h"
 
 JPAK::JPAK() {
-	// TODO Auto-generated constructor stub
-
+	ready = false;
 }
 
 JPAK::~JPAK() {
-	// TODO Auto-generated destructor stub
+	if(jpakfile.is_open())
+		jpakfile.close();
+	root.clear();
 }
 bool JPAK::ProcessTable(string &table)	{
 	return reader.parse(table.c_str(), root);
@@ -34,6 +35,7 @@ bool JPAK::LoadFromFile(string &filename)	{
 			char table[fsize-tableoffset-4];
 			jpakfile.read(table, fsize-tableoffset-4);
 			string table_s = table;
+			jpakfile.seekg(0,ios_base::beg);
 			if(ProcessTable(table_s))	{
 				ready = true;
 				return false;
