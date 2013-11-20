@@ -1,1 +1,64 @@
-{"files": {"MUSIC.MP3": {"path": "/MUSIC.MP3", "size": 3799296, "name": "MUSIC.MP3", "offset": 50092}, "MUSIC.OGG": {"path": "/MUSIC.OGG", "size": 2125034, "name": "MUSIC.OGG", "offset": 3849388}, "TITLE.JPG": {"path": "/TITLE.JPG", "size": 50079, "name": "TITLE.JPG", "offset": 13}}, "name": "nx20/13A0", "directories": {"CHARTS": {"files": {}, "path": "/CHARTS", "directories": {"DOUBLE": {"files": {"17.NX": {"path": "/CHARTS/DOUBLE/17.NX", "size": 46052, "name": "17.NX", "offset": 6005374}}, "path": "/CHARTS/DOUBLE", "directories": {}, "name": "DOUBLE", "numfiles": 1}, "SINGLE": {"files": {"17.NX": {"path": "/CHARTS/SINGLE/17.NX", "size": 30952, "name": "17.NX", "offset": 5974422}}, "path": "/CHARTS/SINGLE", "directories": {}, "name": "SINGLE", "numfiles": 1}}, "name": "CHARTS", "numfiles": 0}}, "path": "/", "numfiles": 3, "size": 0}
+{
+    "files": {
+        "MUSIC.MP3": {
+            "path": "/MUSIC.MP3",
+            "size": 3799296,
+            "name": "MUSIC.MP3",
+            "offset": 50092
+        },
+        "MUSIC.OGG": {
+            "path": "/MUSIC.OGG",
+            "size": 2125034,
+            "name": "MUSIC.OGG",
+            "offset": 3849388
+        },
+        "TITLE.JPG": {
+            "path": "/TITLE.JPG",
+            "size": 50079,
+            "name": "TITLE.JPG",
+            "offset": 13
+        }
+    },
+    "name": "nx20/13A0",
+    "directories": {
+        "CHARTS": {
+            "files": {},
+            "path": "/CHARTS",
+            "directories": {
+                "DOUBLE": {
+                    "files": {
+                        "17.NX": {
+                            "path": "/CHARTS/DOUBLE/17.NX",
+                            "size": 46052,
+                            "name": "17.NX",
+                            "offset": 6005374
+                        }
+                    },
+                    "path": "/CHARTS/DOUBLE",
+                    "directories": {},
+                    "name": "DOUBLE",
+                    "numfiles": 1
+                },
+                "SINGLE": {
+                    "files": {
+                        "17.NX": {
+                            "path": "/CHARTS/SINGLE/17.NX",
+                            "size": 30952,
+                            "name": "17.NX",
+                            "offset": 5974422
+                        }
+                    },
+                    "path": "/CHARTS/SINGLE",
+                    "directories": {},
+                    "name": "SINGLE",
+                    "numfiles": 1
+                }
+            },
+            "name": "CHARTS",
+            "numfiles": 0
+        }
+    },
+    "path": "/",
+    "numfiles": 3,
+    "size": 0
+}

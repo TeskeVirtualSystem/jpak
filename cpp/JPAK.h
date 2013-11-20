@@ -16,6 +16,8 @@
 #include <fstream>
 #include <string>
 
+#define JPAK_NOT_FOUND_DATA "NOT_FOUND_ON_JPAK"		//	Constant that is returned as Json::Value when not found
+
 using namespace std;
 class JPAK {
 private:
@@ -29,7 +31,13 @@ public:
 	virtual ~JPAK();
 
 	bool LoadFromFile(string &);
-	void GetFile(string &, char *);
+	bool GetFile(string &, char **, int *);
+	bool GetFile(const char *path, char **buf, int *size) { string t = path; return GetFile(t,buf,size); };
+	void DecompressFile(char *, char**);
+	void PrintTree(Json::Value &);
+	void PrintTree();
+
+	Json::Value FindFileEntry(vector<string> &, Json::Value &);
 };
 
 #endif /* JPAK_H_ */
