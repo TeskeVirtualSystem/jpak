@@ -24,6 +24,7 @@ What is done
 *   Get file as HTML Data URI (for hide from Network Requests)
 *   GZIP Decompress Support, forked from https://github.com/jsxgraph/jsxgraph/
 *	Simple C# Windows Tool for Exploring and Export Content from JPAK Files
+*   C++ Extension
 
 TODO
 ========
@@ -31,6 +32,7 @@ TODO
 *   Add option to compress files on packing.
 *	More stuff on JPAK Explorer for Windows
 *	JPAK Explorer for Linux
+*   Documents for C#, C++
 
 How to use it
 ========
