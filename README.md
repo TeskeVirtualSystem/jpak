@@ -33,6 +33,7 @@ TODO
 *	More stuff on JPAK Explorer for Windows
 *	JPAK Explorer for Linux
 *   Documents for C#, C++
+*   Zlib Decompress for C++
 
 How to use it
 ========
