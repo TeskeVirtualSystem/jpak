@@ -30,6 +30,12 @@ JPAK::JPAK() {
 	ready = false;
 }
 
+JPAK::JPAK(const JPAK &jpak)	{
+	string tmp = jpak.jpakfilename;
+	if(tmp.size() > 0)
+		LoadFromFile(tmp);
+}
+
 JPAK::~JPAK() {
 	if(jpakfile.is_open())
 		jpakfile.close();
@@ -46,6 +52,7 @@ bool JPAK::LoadFromFile(string &filename)	{
 	unsigned int tableoffset;
 	unsigned int fsize = 0;
 	jpakfile.open(filename.c_str());
+	jpakfilename = filename;
 	if(jpakfile.good())	{
 		jpakfile.read(magic,5);
 		if(strncmp("JPAK1",magic,5) == 0)	{

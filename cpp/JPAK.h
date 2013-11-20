@@ -27,9 +27,12 @@ private:
 	bool ProcessTable(string &);
 public:
 	JPAK();
+	JPAK(const JPAK&);
 	virtual ~JPAK();
 
 	Json::Value root;
+	string jpakfilename;
+
 	bool LoadFromFile(string &);
 	bool GetFile(string &, char **, int *);
 	bool GetFile(const char *path, char **buf, int *size) { string t = path; return GetFile(t,buf,size); };
