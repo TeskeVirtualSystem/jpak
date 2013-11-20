@@ -111,6 +111,16 @@ Json::Value JPAK::FindFileEntry(vector<string> &path, Json::Value &root)	{
 			return Json::Value(JPAK_NOT_FOUND_DATA);
 	}
 }
+
+vector<Json::Value> JPAK::FindFileByExt(string &ext, Json::Value &folder)	{
+	vector<Json::Value> results;
+	for(auto file : folder["files"])	{
+		if(file.asString().find(ext) != string::npos)
+			results.push_back(file);
+	}
+	return results;
+}
+
 bool JPAK::GetFile(string &path, char **buffer, int *size)	{
 	vector<string> paths = split(path, '/');
 	//	Here is relative to root, so the first will be blank if starts with "/"
@@ -129,3 +139,5 @@ bool JPAK::GetFile(string &path, char **buffer, int *size)	{
 		return false;
 	}
 }
+
+

@@ -21,7 +21,6 @@
 using namespace std;
 class JPAK {
 private:
-	Json::Value root;
 	Json::Reader reader;
 	ifstream jpakfile;
 	bool ready;
@@ -30,6 +29,7 @@ public:
 	JPAK();
 	virtual ~JPAK();
 
+	Json::Value root;
 	bool LoadFromFile(string &);
 	bool GetFile(string &, char **, int *);
 	bool GetFile(const char *path, char **buf, int *size) { string t = path; return GetFile(t,buf,size); };
@@ -38,6 +38,7 @@ public:
 	void PrintTree();
 
 	Json::Value FindFileEntry(vector<string> &, Json::Value &);
+	vector<Json::Value> FindFileByExt(string &, Json::Value &);
 };
 
 #endif /* JPAK_H_ */
