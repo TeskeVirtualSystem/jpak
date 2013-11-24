@@ -11,6 +11,21 @@ By: Lucas Teske
 https://github.com/racerxdl/jpak
 */
 
+/** 
+ * Base64 Enconding Base
+ * @const 
+ * @type {string}
+ */ 
+JPAK.Base64_Encoding = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+/** 
+ * Enable this to show debug messages
+ * @const 
+ * @type {boolean}
+ */ 
+JPAK.ShowMessages = false;
+
+
 /*  IE10 Hack for ArrayBuffer Slice */
 if(!ArrayBuffer.prototype.slice)    {
     ArrayBuffer.prototype.slice = function(start,end)   {
@@ -26,7 +41,10 @@ if(!ArrayBuffer.prototype.slice)    {
     };
 };
 
-/*  Clean all deleteValue from array    */
+/**
+ * Clean all deletedValue from array
+ * @expose
+ */
 Array.prototype.clean = function(deleteValue) {
   for (var i = 0; i < this.length; i++) {
     if (this[i] == deleteValue) {         
@@ -37,14 +55,19 @@ Array.prototype.clean = function(deleteValue) {
   return this;
 };
 
-/*  Start of JPAK Class Stuff   */
+/**
+ * JPAK Base Class
+ * @expose
+ */
 var JPAK = function()   {};
 
-// Enable this to show Debug Messages
-JPAK.ShowMessages = false;
+window["JPAK"] = JPAK;
 
-// Auxiliary functions
-//  Convert Unsigned Int 8 Array Buffer to String 
+/**
+ * Convert Unsigned Int8 ArrayBuffer to String
+ * @param {Uint8Array} uintArray
+ * @return {string}
+ */
 JPAK.Uint8ArrayToString = function(uintArray) {
     var o = "";
     for(var i=0;i<uintArray.byteLength;i++)  
@@ -52,6 +75,18 @@ JPAK.Uint8ArrayToString = function(uintArray) {
     return o;
 }
 
+/** 
+ * Provided for retro-compatibility.
+ * @deprecated
+ */ 
+var u8as = JPAK.Uint8ArrayToString; //  Provided for compatibility
+
+/**
+ * Convert a String to an ArrayBuffer using uint8
+ * @expose
+ * @param {string} str
+ * @return {ArrayBuffer}
+ */
 JPAK.String2ArrayBuffer = function(str)   {
     var buf = new ArrayBuffer(str.length);
     var bufView = new Uint8Array(buf);
@@ -60,11 +95,13 @@ JPAK.String2ArrayBuffer = function(str)   {
     return buf;
 };
 
-var u8as = JPAK.Uint8ArrayToString; //  Provided for compatibility
-
-JPAK.Base64_Encoding = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-// Modified version from https://gist.github.com/jonleighton/958841
+/**
+ * Returns a Base64 String from an ArrayBuffer
+ * Modified version from https://gist.github.com/jonleighton/958841
+ * @expose
+ * @param {arrayBuffer} arrayBuffer
+ * @return {string} base64
+ */
 JPAK.ArrayBufferToBase64 = function(arrayBuffer)  {
   var base64    = ''
 
@@ -115,13 +152,22 @@ JPAK.ArrayBufferToBase64 = function(arrayBuffer)  {
 
   return base64
 };
-
+/**
+ * Logs a message, if enabled
+ * @expose
+ * @param {string} msg
+ */
 JPAK.log = function(msg)    {
     if(JPAK.ShowMessages)
         console.log(msg);
 }
 
-// JPAKLoader
+/**
+ * Constructor of JPAKLoader
+ * @constructor
+ * @expose
+ * @param {Object{jpakfile}} params
+ */
 JPAK.jpakloader = function(parameters)  {
     if(parameters !== undefined)    {
         this.jpakfile = parameters.file;
@@ -131,7 +177,12 @@ JPAK.jpakloader = function(parameters)  {
     this.dataloaded = false;
 };
 
-//  Searches a file on the cache
+/**
+ * Searches for a file on the cache
+ * Returns undefined if not found
+ * @param {string} path
+ * @return {Object} file
+ */
 JPAK.jpakloader.prototype.CacheLoad     =   function(path)  {
     for(var i=0;i<this.filecache.length;i++)    {
         if(this.filecache[i].path == path)
@@ -141,6 +192,9 @@ JPAK.jpakloader.prototype.CacheLoad     =   function(path)  {
 };
 
 //  Loads the jpak file and process it
+/**
+ * Loads the JPAK File and Process it
+ */
 JPAK.jpakloader.prototype.Load = function() {
     if(this.jpakfile !== undefined) {
         // _this is used to reference the jpakloader object
@@ -197,7 +251,12 @@ JPAK.jpakloader.prototype.Load = function() {
         console.log("JPAK::jpakloader - No file to load!");
 };
 
-//  Gets the directory entry if exists.
+/**
+ * Gets the directory entry if exists.
+ * Returns undefined if not found
+ * @param {string} path
+ * @return {object} directoryentry
+ */
 JPAK.jpakloader.prototype.FindDirectoryEntry = function(path)   {
     var base = this.filetable;
     if(this.dataloaded) {
@@ -220,7 +279,12 @@ JPAK.jpakloader.prototype.FindDirectoryEntry = function(path)   {
     return base;
 };
 
-//  Gets the file entry if exists.
+/**
+ * Gets the file entry if exists.
+ * Returns undefined if not found
+ * @param {string} path
+ * @return {object} fileentry
+ */
 JPAK.jpakloader.prototype.FindFileEntry = function(path)    {
     var pathblock = path.split("/").clean("");
     var filename  = pathblock[pathblock.length-1];
@@ -232,7 +296,12 @@ JPAK.jpakloader.prototype.FindFileEntry = function(path)    {
     return undefined;
 };
 
-// Returns an object { "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }
+/**
+ * Lists the dir returning an object like:
+ * { "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }
+ * @param {string} path
+ * @return {object} dirlist
+ */
 JPAK.jpakloader.prototype.ls = function(path)   {
     var out = { "files" : [], "dirs" : [] };
     if(this.dataloaded) {
@@ -250,7 +319,13 @@ JPAK.jpakloader.prototype.ls = function(path)   {
     return out;
 };
 
-//  Returns a blob of the file. It looks in the cache for already loaded files.
+/**
+ * Returns a blob of the file. 
+ * It looks in the cache for already loaded files.
+ * @param {path} File Path
+ * @param {type} File Mime Type
+ * @return {Blob} File Blobs 
+ */
 JPAK.jpakloader.prototype.GetFile = function(path, type)  {
     var file = this.FindFileEntry(path);
     type = type || 'application/octet-binary';
@@ -270,7 +345,13 @@ JPAK.jpakloader.prototype.GetFile = function(path, type)  {
     return undefined;
 };
 
-//  Returns a url of the blob file. It looks in the cache for already loaded files.
+/**
+ * Returns a url of blob file. 
+ * It looks in the cache for already loaded files.
+ * @param {path} File Path
+ * @param {type} File Mime Type
+ * @return {url} File URL 
+ */
 JPAK.jpakloader.prototype.GetFileURL = function(path, type) {
     var cache = this.CacheLoad(path);
     if(cache == undefined)  {
@@ -285,7 +366,13 @@ JPAK.jpakloader.prototype.GetFileURL = function(path, type) {
         return cache.url;
 };
 
-//  Returns an arraybuffer with file content. It looks in the cache for already loaded files.
+/**
+ * Returns an arraybuffer with file content. 
+ * It looks in the cache for already loaded files.
+ * @param {path} File Path
+ * @param {type} File Mime Type
+ * @return {ArrayBuffer} File Buffer 
+ */
 JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
     var file = this.FindFileEntry(path);
     type = type || 'application/octet-binary';
@@ -307,6 +394,13 @@ JPAK.jpakloader.prototype.GetFileArrayBuffer = function(path, type) {
 };
 
 //  Returns an Base64 Encoded File Content. It looks in the cache for already loaded files.
+/**
+ * Returns an Base64 Encoded File Content.
+ * It looks in the cache for already loaded files.
+ * @param {path} File Path
+ * @param {type} File Mime Type
+ * @return {string} Base64 String
+ */
 JPAK.jpakloader.prototype.GetBase64File = function(path, type) {
     var filedata = this.GetFileArrayBuffer(path, type);
     if(filedata == undefined)
@@ -315,9 +409,15 @@ JPAK.jpakloader.prototype.GetBase64File = function(path, type) {
     return JPAK.ArrayBufferToBase64(filedata);
 };
 
-//  Returns an HTML Data URI with File Content. It looks in the cache for already loaded files.
-//  Using HTML Data URI for Images, you can hide the load process from chrome Network Inspector
-//  I didnt find any place that you can find DataURI File
+/**
+ * Returns an HTML Data URI with File Content.
+ * It looks in the cache for already loaded files.
+ * Using HTML Data URI for Images, you can hide the load process from chrome Network Inspector
+ * I didnt find any place that you can find DataURI File
+ * @param {path} File Path
+ * @param {type} File Mime Type
+ * @return {string} HTML Data URI
+ */
 JPAK.jpakloader.prototype.GetHTMLDataURIFile = function(path, type, encoding) {
     var b64 = this.GetBase64File(path, type);
     // HTML Data URI Format: data:[<MIME-type>][;charset=<encoding>][;base64],<data>
