@@ -77,16 +77,16 @@ Example of JPAK Filesystem Table:
 
 The JPAK has following structure:
 
-|   START   |    END    |          Description              |
-| --------- | --------- | --------------------------------- |
-|    0x0    |    0x5    | JPAK2 Magic Number                |
-|    0x5    |    0xC    | Padding (0x00)                    |
-|    0xC    |    0xY    | Start of Files Data               |
-|  0x**Y**  |  0x**X**  | JSON File Table                   |
-|  0x**X**  |  0x**W**  | `uint32_t` Producer ID (Look 2.1) |
-|  0x**X**  |  0x**W**  | `uint32_t` JPAK Flags (Look 2.1)  |
-|  0x**W**  |  0x**Z**  | `uint32_t` User Flags (Look 2.1)  |
-|  0x**Z**  |   `END`   | `uint32_t` JSON FileTable Offset  |
+|    START     |      END      |          Description              |
+| ------------ | ------------- | --------------------------------- |
+|  0x0         |  0x5          | JPAK2 Magic Number                |
+|  0x5         |  0xC          | Padding (0x00)                    |
+|  0xC         |  0xY          | Start of Files Data               |
+|  0x**Y**     |  0x**X**      | JSON File Table                   |
+|  0x**X**     |  0x**X+4**    | `uint32_t` Producer ID (Look 2.1) |
+|  0x**X+4**   |  0x**X+8**    | `uint32_t` JPAK Flags (Look 2.1)  |
+|  0x**X+8**   |  0x**X+12**   | `uint32_t` User Flags (Look 2.1)  |
+|  0x**X+12**  |  `END`        | `uint32_t` JSON FileTable Offset  |
 
 #####   2.1 JPAK / USER FLAGS and Producer ID
     
@@ -128,4 +128,4 @@ So in `Extended Environment` we have following pieces:
 *   `JPAK DATA STORAGE (JDS)` - The data only file storage
 *   `JPAK META STORAGE (JMS)` - The meta storage ( filetable )
 
-For more specification of Extended Mode, see Extended Mode README.md
+For more specification of Extended Mode, see Extended Mode\README.md

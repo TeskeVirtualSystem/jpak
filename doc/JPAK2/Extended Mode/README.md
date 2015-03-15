@@ -27,16 +27,16 @@ The Extended Mode of JPAK is consisted of two new JPAK Format files: a **JDS** (
 
 The JPAK Meta Storage is similar to JPAK Filetable Structure, but aditionally has a volume list (JDK) for acessing the data storage. It has the follwing struct:
 
-|   START   |    END    |                    Description                    |
-| --------- | --------- | ------------------------------------------------- |
-|    0x0    |    0x4    | JMS1 Magic Number                                 |
-|    0x4    |    0xC    | Padding (0x00)                                    |
-|  0x**V**  |  0x**U**  | JSON Volume Table                                 |
-|  0x**U**  |  0x**W**  | JSON File Table                                   |
-|  0x**W**  |  0x**X**  | `uint32_t` Producer ID (Look JPAK2.0 spec at 2.1) |
-|  0x**X**  |  0x**Y**  | `uint32_t` JPAK Flags (Look JPAK2.0 spec at 2.1)  |
-|  0x**Y**  |  0x**Z**  | `uint32_t` User Flags (Look JPAK2.0 spec at 2.1)  |
-|  0x**Z**  |   `END`   | `uint32_t` JSON FileTable Offset                  |
+|    START     |      END      |                    Description                    |
+| ------------ | ------------- | ------------------------------------------------- |
+|  0x0         |  0x4          | JMS1 Magic Number                                 |
+|  0x4         |  0xC          | Padding (0x00)                                    |
+|  0x**V**     |  0x**U**      | JSON Volume Table                                 |
+|  0x**U**     |  0x**W**      | JSON File Table                                   |
+|  0x**X**     |  0x**X+4**    | `uint32_t` Producer ID (Look JPAK2.0 spec at 2.1) |
+|  0x**X+4**   |  0x**X+8**    | `uint32_t` JPAK Flags  (Look JPAK2.0 spec at 2.1) |
+|  0x**X+8**   |  0x**X+12**   | `uint32_t` User Flags  (Look JPAK2.0 spec at 2.1) |
+|  0x**X+12**  |  `END`        | `uint32_t` JSON FileTable Offset                  |
 
 The JSON Filetable is the same, the offset is relative to the first volume. The JSON Volume Table is as follow:
 

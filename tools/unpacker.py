@@ -20,9 +20,36 @@ if len(sys.argv) > 1:
     for packfile in user_args:
         mkdir(os.path.splitext(os.path.basename(packfile))[0] + "/")
         volume = open(packfile, "rb")
-        filetable = GetFileTable(volume)
-        print filetable
-        ProcessFolder(filetable, volume, "")
+        magic = volume.read(5)
+        volume.seek(0)
+        if "JPAK1" in magic:
+            version = 1
+        elif "JPAK2" in magic:
+            version = 2
+        else:
+            print 'Unknown version: %s' %magic
+            exit(1)
+        if version == 1:
+            filetable = GetFileTable(volume, version)
+            print filetable
+            ProcessFolder(filetable, volume, "", version)
+        elif version == 2:
+            ProdID, UserFlags, JPAKFlags = GetFlags(volume)
+            print "Producer ID: %s - UserFlags: %x" %(ProdID, UserFlags)
+            JPAKFlags = ParseJPAKFlags(JPAKFlags)
+            if JPAKFlags["ZLIB"]:
+                print "Is compressed"
+            if JPAKFlags["AES"]:
+                print "Is encrypted"
+            key = None
+            if JPAKFlags["AES"]:
+                key = raw_input("Encrypted file, please enter the password: ")
+                if key == None or len(key) == 0:
+                    print "No Password supplied"
+                    exit(1)
+            filetable = GetFileTable(volume, version, key, JPAKFlags["ZLIB"])
+            ProcessFolder(filetable, volume, "", version, JPAKFlags["ZLIB"])
+
         volume.close()
 else:
     print '''This python script will take a jpak as argument, and generates a folder  with same name of the file, with contents extracted. 
