@@ -21,6 +21,7 @@ if len(sys.argv) > 1:
         mkdir(os.path.splitext(os.path.basename(packfile))[0] + "/")
         volume = open(packfile, "rb")
         filetable = GetFileTable(volume)
+        print filetable
         ProcessFolder(filetable, volume, "")
         volume.close()
 else:
