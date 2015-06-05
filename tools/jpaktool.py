@@ -145,7 +145,7 @@ def GetFileTable(volume, ver=2, key=None, compress=None):
     if ver == 1:
         volume.seek(-4, 2)
         filetableoffset = struct.unpack("<I",volume.read(4))[0]
-        volume.seek(0)
+        volume.seek(0,2)
         size = volume.tell()
         volume.seek(filetableoffset)
         filetable = volume.read(size-filetableoffset-4) 
