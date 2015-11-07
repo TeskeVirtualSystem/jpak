@@ -217,6 +217,7 @@ JPAK.jpakloader.prototype.Load = function() {
             if (this.status === 200) {
                 var data = this.response;
                 var MagicNumber = u8as(new Uint8Array(data.slice(0,5)));
+                var MagicNumber2 = u8as(new Uint8Array(data.slice(0,4)));
                 if(MagicNumber === "JPAK1")  {
                     JPAK.log("JPAK::jpakloader - Loaded file "+_this.jpakfile+" successfully. JPAK1 Format");
                     var filetableoffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
@@ -227,6 +228,10 @@ JPAK.jpakloader.prototype.Load = function() {
                     _this.dataloaded = true;
                     if(_this.onload !== undefined)   
                         _this.onload();
+                } else if(MagicNumber === "JMS1") {
+                  JPAK.log("JPAK::jpakloader - Loaded JPAK Metadata File "+_this.jpakfile+" successfully.");
+                } else if(MagicNumber2 === "JDS1") {
+                  JPAK.log("JPAK::jpakloader - Loaded JPAK Storage File "+_this.jpakfile+" successfully.");
                 }else{
                     JPAK.log("JPAK::jpakloader - Error loading file "+_this.jpakfile+" (8000): Wrong File Magic. Expected JPAK1 got "+MagicNumber);
                     if(_this.onerror !== undefined)
