@@ -15,15 +15,30 @@ https://github.com/racerxdl/jpak
 
 import struct, os, json, sys
 from jpaktool import *
+from jpakmodels import *
 
 if len(sys.argv) > 3:
-    metadata = sys.argv[1]
+    metadataF = sys.argv[1]
     volume = sys.argv[2]
     user_args = sys.argv[3:]
-    if os.path.isfile(metadata):
+    metadata = JMS()
+    if os.path.isfile(metadataF):
       print "Metadata %s has been found. Appending volume %s to JPAK" %(metadata, volume)
+      f = open(metadataF, "rb")
+      data = f.read()
+      f.close()
+      metadata.fromBinary(data)
+
+    jdata = JDS(os.path.basename(volume), volume)
+    metadata.addVolume(jdata)
+
+    for ua in user_args:
+      metadata.fromDirectory(ua, jdata)
+
+    metadata.toFile(metadataF)
+
 else:
   print '''
 Usage: python packer.py metadata.jms volumeX.jds folder ...
-Ex: python packer.py myproject.jms volume0.jds /home/lucas/
+Ex: python extpacker.py myproject.jms volume0.jds /home/lucas/
 This will generate myproject.jms (or append a new volume) with contents of folder /home/lucas'''

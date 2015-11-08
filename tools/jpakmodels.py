@@ -13,32 +13,26 @@ https://github.com/racerxdl/jpak
 
 '''
 
-import json, struct
+import json, struct, os
 
 class JPKVolumeEntry:
   '''
     {
-      "filename": "vol0.jds",
-      "start": 0,
-      "end": 1000
+      "filename": "vol0.jds"
     }
   '''
   filename = ""
   start = 0
   end = 0
 
-  def __init__(self, filename="", start=0, end=0):
+  def __init__(self, filename=""):
     self.filename = filename
-    self.start = start
-    self.end = end
 
   def toObject(self):
-    return {"filename":self.filename,"start":self.start,"end":self.end}
+    return {"filename":self.filename}
 
   def fromObject(self, obj):
     self.filename = obj["filename"] if "filename" in obj else ""
-    self.start = obj["start"] if "start" in obj else 0
-    self.end = obj["end"] if "end" in obj else 0
 
 class JPKFileEntry:
   '''
@@ -49,6 +43,7 @@ class JPKFileEntry:
       "size"          :   FILESIZE                //  The file size
       "aeskey"        :   AESKEY                  //  File key if != false
       "zlib"          :   FALSE/TRUE              //  If file is compressed
+      "volume"        :   VOLUMEID                //  ID from VolumeTable
       "md5"           :   MD5SUM                  //  Uncompresssed/unencrypted file MD5SUM
   }
   '''
@@ -58,19 +53,21 @@ class JPKFileEntry:
   size = 0
   aeskey = ""
   zlib = False
+  volume = ""
   md5 = ""
 
-  def __init__(self, name="", path="", offset=0, size=0, aeskey="", zlib=False, md5=""):
+  def __init__(self, name="", path="", offset=0, size=0, aeskey="", zlib=False, volume="", md5=""):
     self.name = name
     self.path = path
     self.offset = offset
     self.size = size
     self.aeskey = aeskey
     self.zlib = zlib
+    self.volume = volume
     self.md5 = md5
 
   def toObject(self):
-    return {"name":self.name, "path":self.path, "offset":self.offset, "size":self.size, "aeskey":self.aeskey, "zlib":self.zlib, "md5": self.md5}
+    return {"name":self.name, "path":self.path, "offset":self.offset, "size":self.size, "aeskey":self.aeskey, "zlib":self.zlib, "volume":self.volume, "md5": self.md5}
 
   def fromObject(self, obj):
     self.name     = obj["name"]   if "name"   in obj else ""
@@ -79,6 +76,7 @@ class JPKFileEntry:
     self.size     = obj["size"]   if "size"   in obj else ""
     self.aeskey   = obj["aeskey"] if "aeskey" in obj else ""
     self.zlib     = obj["zlib"]   if "zlib"   in obj else ""
+    self.volume   = obj["volume"] if "volume" in obj else ""
     self.md5      = obj["md5"]    if "md5"    in obj else ""
 
 class JPKDirectoryEntry:
@@ -110,6 +108,7 @@ class JPKDirectoryEntry:
   def toObject(self):
     dirs = {}
     fls = {}
+
     for key, value in self.directories.iteritems():
       dirs[key] = value.toObject()
 
@@ -139,24 +138,53 @@ class JPKDirectoryEntry:
   def toJson(self):
     return json.dumps(self.toObject())
 
-  def fromJson(self, json):
-    obj = json.loads(json)
+  def fromJson(self, json_):
+    obj = json.loads(json_)
     self.fromObject(obj)
 
-def JMS:
+  def fromDirectory(self, folder, jds):
+    if os.path.isdir(folder):
+      print "Folder: %s" % folder
+      dt = os.listdir(folder)
+      for i in dt:
+        print "File: %s" %i
+        if os.path.isfile(folder+"/"+i):
+          offset, size = jds.addFromFile(folder+"/"+i)
+          newfile = JPKFileEntry(name=os.path.basename(i), path=folder+"/"+i, offset=offset, size=size, volume=jds.name)
+          self.files = {}
+          self.files[os.path.basename(i)] = newfile
+          self.numfiles += 1
+          print self.name
+        else:
+          newdir = JPKDirectoryEntry(directories={},files={})
+          newdir.fromDirectory(folder+"/"+i, jds)
+          self.directories[os.path.basename(i)] = newdir
+
+    else:
+      print "File: %s" % folder
+      offset, size = jds.addFromFile(folder)
+      newfile = JPKFileEntry(name=os.path.basename(folder), path=folder, offset=offset, size=size)
+      self.files[os.path.basename(folder)] = newfile
+      self.numfiles += 1
+
+class JMS:
   MAGIC = "JMS1"
-  volumeTable = []
+  volumeTable = {}
   fileTable = JPKDirectoryEntry()
   producerId = 0
   flags = 0
   userflags = 0
 
-  def __init__(self, volumeTable=[], fileTable={}, producerId=0, flags=0, userflags=0):
+  def __init__(self, volumeTable={}, fileTable=JPKDirectoryEntry(), producerId=0, flags=0, userflags=0):
     self.volumeTable = volumeTable
     self.fileTable = fileTable
     self.producerId = producerId
     self.flags = flags
     self.userflags = userflags
+    self.fileTable.name = "ROOT"
+
+  def fromDirectory(self, directory, jds):
+    self.fileTable.fromDirectory(directory, jds)
 
   def toObject(self):
     vt = []
@@ -179,7 +207,7 @@ def JMS:
     if "fileTable" in obj:
       self.fileTable.fromObject(obj["fileTable"])
 
-    self.volumeTable = []
+    self.volumeTable = {}
 
     if "volumeTable" in obj:
       for value in obj["volumeTable"]:
@@ -194,18 +222,96 @@ def JMS:
       self.MAGIC = "JMS1"
       return
 
-    fileTableOffset = struct.unpack("<I", data[len(data)-4:len(data)])
+    fileTableOffset = struct.unpack("<I", data[len(data)-4:len(data)])[0]
     volumeTableSize = fileTableOffset - 0xC
     fileTableSize = len(data) - fileTableOffset - 12
 
-    fileTableData = json.loads(data[fileTableOffset:fileTableOffset+fileTableSize])
+    fileTableData = json.loads(data[fileTableOffset:fileTableOffset+fileTableSize-4])
     volumeTableData = json.loads(data[0xC:volumeTableSize+0xC])
 
     self.fileTable = JPKDirectoryEntry()
-    self.fileTable.fromJson(fileTableData)
+    self.fileTable.fromObject(fileTableData)
 
-    self.volumeTable = []
-    for value in volumeTableData:
+    self.volumeTable = {}
+    for key, value in volumeTableData.iteritems():
       v = JPKVolumeEntry()
       v.fromObject(value)
-      self.volumeTable.append(v)
+      self.volumeTable[key] = v
+
+  def toBinary(self):
+    data = self.MAGIC
+    data += "\x00" * 8
+    vt = {}
+    
+    for key, value in self.volumeTable.iteritems():
+      vt[key] = value.toObject()
+    data += json.dumps(vt)
+
+    fileTableOffset = len(data)
+    data += self.fileTable.toJson()
+    data += struct.pack("<4I", self.producerId, self.flags, self.userflags, fileTableOffset)
+    return data
+
+  def addVolume(self, jds):
+    if jds.name in self.volumeTable:
+      print "Volume already exists! %s" % jds.name
+      return
+
+    print self.volumeTable
+    volume = JPKVolumeEntry(jds.filename)
+    self.volumeTable[jds.name] = volume
+
+  def toFile(self, filename):
+    data = self.toBinary()
+    f = open(filename, "wb")
+    f.write(data)
+    f.close()
+
+class JDS:
+  MAGIC = "JDS1"
+  name = ""
+  filename = ""
+  fd = None
+  CHUNK = 4096
+
+  def __init__(self, name, filename):
+    self.filename = filename
+    self.name = name
+    if os.path.isfile(filename):
+      self.fd = open(filename, "rb+")
+    else:
+      self.fd = open(filename, "wb+")
+
+    self.fd.seek(0,2)
+    if self.fd.tell() == 0:
+      self.__buildHeader()
+    self.fd.seek(0)
+
+  def __buildHeader(self):
+    print "Creating Header"
+    self.fd.write(self.MAGIC)
+    self.fd.write("\x00"*8)
+
+  def add(self, data):
+    offset = fd.tell()
+    size = len(data)
+    self.fd.write(data)
+    return offset, size
+
+  def addFromFile(self, filename):
+    f = open(filename,"rb")
+    offset = self.fd.tell()
+    f.seek(0,2)
+    size = f.tell()
+    f.seek(0)
+    c = 0
+    while c < size:
+      chunk = self.CHUNK if size - c > self.CHUNK else size - c
+      data = f.read(chunk)
+      self.fd.write(data)
+      c += chunk
+    return offset, size
+
+    def close(self):
+      self.fd.close()
+

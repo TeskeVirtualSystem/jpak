@@ -31,6 +31,7 @@ And for the file entries:
         "size"          :   FILESIZE                //  The file size
         "aeskey"        :   AESKEY                  //  File key if != false
         "zlib"          :   FALSE/TRUE              //  If file is compressed
+        "volume"        :   VOLUMEID                //  ID from VolumeTable
         "md5"           :   MD5SUM                  //  Uncompresssed/unencrypted file MD5SUM
     }
 
@@ -47,11 +48,13 @@ Example of JPAK Filesystem Table:
                 'path': '/whatisthis',
                 'offset': 13,
                 'name': 'whatisthis',
+                'volume': 'vol0.jdt',
                 'size': 55
             },
             'test.html': {
                 'path': '/test.html',
                 'offset': 81,
+                'volume': 'vol1.jdt',
                 'name': 'test.html',
                 'size': 49
             },
@@ -66,6 +69,7 @@ Example of JPAK Filesystem Table:
                     't': {
                         'path': '/3/t',
                         'offset': 9104,
+                        'volume': 'vol0.jdt',
                         'name': 't',
                         'size': 0
                     }

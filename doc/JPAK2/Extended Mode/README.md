@@ -31,7 +31,7 @@ The JPAK Meta Storage is similar to JPAK Filetable Structure, but aditionally ha
 | ------------ | ------------- | ------------------------------------------------- |
 |  0x0         |  0x4          | JMS1 Magic Number                                 |
 |  0x4         |  0xC          | Padding (0x00)                                    |
-|  0x**V**     |  0x**U**      | JSON Volume Table                                 |
+|  0xC         |  0x**U**      | JSON Volume Table                                 |
 |  0x**U**     |  0x**W**      | JSON File Table                                   |
 |  0x**X**     |  0x**X+4**    | `uint32_t` Producer ID (Look JPAK2.0 spec at 2.1) |
 |  0x**X+4**   |  0x**X+8**    | `uint32_t` JPAK Flags  (Look JPAK2.0 spec at 2.1) |
@@ -41,15 +41,11 @@ The JPAK Meta Storage is similar to JPAK Filetable Structure, but aditionally ha
 The JSON Filetable is the same, the offset is relative to the first volume. The JSON Volume Table is as follow:
 
     {
-        "0" :   {
+        "vol0.jds" :   {
             "filename"  :   "vol0.jds",     //  Volume Filename
-            "start"     :   "0",            //  Start of volume in Bytes
-            "end"       :   "1024",         //  End of volume in Bytes
         },
-        "1" :   {
+        "vol1.jds" :   {
             "filename"  :   "vol1.jds",     //  Volume Filename
-            "start"     :   "1024",         //  Start of volume in Bytes
-            "end"       :   "4096",         //  End of volume in Bytes
         }
     }
 
