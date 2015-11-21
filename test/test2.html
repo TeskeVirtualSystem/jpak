@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>Javascript Package Test V2</title>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script src="../dist/jpak.js"></script>
+    <script>
+      var packtest = new JPAK.Loader({"file" : "packtest.jpak"});
+      packtest.load().then(function() {
+        // Lets load the HTML file
+        packtest.getFile("/test.html", "text/html").then(function(data) {
+          var reader = new FileReader();
+          reader.onloadend = function(evt)  {
+              console.log("Loaded /test.html");
+              $("body").append('<BR>/test.html:<BR><BR>'+evt.target.result);   
+          };
+          reader.readAsText(data);
+        });
+
+        // Lets load the Image File
+        packtest.getFileURL("/img/python-logo-official.png", "image/png").then(function(data) {
+          $("body").append('<BR>/img/python-logo-official.png: <BR><BR> <img src="'+data+'">');
+          console.log("Loaded /img/python-logo-official.png");
+        });
+
+        //  Lets load the Javascript File
+        packtest.getFile("/js/test.js", "text/html").then(function(data) {
+          var reader = new FileReader();
+          reader.onloadend = function(evt)  {
+            console.log("Loaded /js/test.js");
+            eval(evt.target.result);   
+          };
+          reader.readAsText(data);
+        });
+      });
+    </script>
+  </head>
+  <body>
+        <pre>
+             _ ____   _    _  __
+            | |  _ \ / \  | |/ /
+         _  | | |_) / _ \ | ' / 
+        | |_| |  __/ ___ \| . \ 
+         \___/|_| /_/   \_\_|\_\
+                                
+        </pre>    
+  </body>
+</html>
