@@ -1,7 +1,7 @@
 #!/usr/bin/nodejs 
 
 var fs = require("fs");
-var jpaktool = require("../dist/jpak.min").JPAK;
+var jpaktool = require("../dist/jpak").JPAK;
 var fs = require("fs");
 var path = require("path");
 

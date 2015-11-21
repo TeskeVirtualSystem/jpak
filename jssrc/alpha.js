@@ -69,14 +69,14 @@ var JPAK = {
   /**
    * Clean all deletedValue from array
    */
-  Array.prototype.clean = function(deleteValue) {
-    for (var i = 0; i < this.length; i++) {
-      if (this[i] === deleteValue) {         
-        this.splice(i, 1);
+  JPAK.Tools.cleanArray = function(array, deleteValue) {
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] === deleteValue) {         
+        array.splice(i, 1);
         i--;
       }
     }
-    return this;
+    return array;
   };
 
   /*

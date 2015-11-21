@@ -76,7 +76,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       while ( c < size ) {
         var chunk = size - c > this.CHUNK ? this.CHUNK : size - c;
         fs.readSync(newFd, data, 0, chunk);
-        fs.writeSync(this.fd, data, 0, chunk);
+        fs.writeSync(this.fd, data, 0, chunk, this.currentPosition);
         c += chunk;
         this.currentPosition += chunk;
       }
