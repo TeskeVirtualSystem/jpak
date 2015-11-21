@@ -9,7 +9,7 @@ print '''
                                                         
 Multiuse Javascript Package 
 By: Lucas Teske
-https://github.com/racerxdl/jpak
+https://github.com/TeskeVirtualSystem/jpak
 '''
 
 import struct, os, json, sys

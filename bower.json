@@ -1,0 +1,29 @@
+{
+  "name": "JPAK",
+  "version": "2.0.0",
+  "homepage": "https://github.com/TeskeVirtualSystem/jpak",
+  "authors": [
+    "Lucas Teske"
+  ],
+  "description": "JPAK is a multi-use Javascript Package System, developed for loading several files at once with only one package.",
+  "keywords" : [
+    "file system",
+    "distribuited",
+    "package"
+  ],
+  "dependencies" : {
+
+  },
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "cpp",
+    "doc",
+    "test",
+    "tests",
+    "spec",
+    "example"
+  ]
+}

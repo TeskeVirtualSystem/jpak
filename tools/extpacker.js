@@ -1,7 +1,7 @@
 #!/usr/bin/nodejs 
 
 var fs = require("fs");
-var jpaktool = require("./jpaktools").JPAK;
+var jpaktool = require("../dist/jpak.min").JPAK;
 var fs = require("fs");
 var path = require("path");
 
@@ -15,14 +15,14 @@ if (process.argv.length < 3) {
   var user_args = process.argv;
   console.log("Metadata File: "+metadataF+" - Volume: "+volume+" Args: ",user_args);
 
-  var metadata = new jpaktool.JMS();
+  var metadata = new jpaktool.Classes.JMS();
 
   if (fs.existsSync(metadataF) && fs.statSync(metadataF).isFile()) {
     var data = fs.readFileSync(metadataF, {flag: "r"});
     metadata.fromBinary(data);
   }
 
-  var jdata = new jpaktool.JDS(path.basename(volume), volume);
+  var jdata = new jpaktool.Classes.JDS(path.basename(volume), volume);
   metadata.addVolume(jdata);
   metadata.fromArgs(user_args, jdata);
   metadata.toFile(metadataF);
