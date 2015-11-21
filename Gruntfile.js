@@ -29,7 +29,7 @@ module.exports = function(grunt) {
 
     concat: {
       dist: {
-        src: ["jssrc/*.js" ],
+        src: ["3rdparty/q/q.js", "jssrc/*.js" ],
         dest: "dist/jpak.js"
       }
     },
