@@ -7,7 +7,7 @@
                                          
 Multiuse Javascript Package 
 By: Lucas Teske
-https://github.com/racerxdl/jpak
+https://github.com/TeskeVirtualSystem/jpak
 */
 
 
@@ -150,6 +150,7 @@ JPAK.ArrayBufferToBase64 = function(arrayBuffer)  {
 
   return base64;
 };
+
 /**
  * Logs a message, if enabled
  * @expose
