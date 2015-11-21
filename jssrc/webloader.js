@@ -109,7 +109,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       var base = this.fileTable;
       if(this.tableLoaded) {
         if(path !== "/") {
-          path = path.split("/").clean("");
+          path = JPAK.Tools.cleanArray(path.split("/"), "");
           var dir = "", ok = true;
           for(var i=0;i<path.length;i++)    {
             dir = path[i];
@@ -132,7 +132,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
      * Returns null if not found
      */
     Loader.prototype.findFileEntry = function(path)    {
-      var pathblock = path.split("/").clean("");
+      var pathblock = JPAK.Tools.cleanArray(path.split("/"), "");
       var filename  = pathblock[pathblock.length-1];
       path = path.replace(filename,"");
       var base = this.findDirectoryEntry(path);
