@@ -75,7 +75,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     JPKDirectoryEntry.prototype.addFile = function(filepath, jds, normalizeName) {
       console.log(" Adding "+(normalizeName ? path.basename(filepath) : filepath)+" to "+this.name);
       var addedData = jds.addFromFile(filepath);
-      this.files[path.basename(filepath)] = new JPAK.Classes.JPKFileEntry(path.basename(filepath), normalizeName ? path.basename(filepath) : filepath, addedData.offset, addedData.size, "", false, jds.name);
+      this.files[path.basename(filepath)] = new JPAK.Classes.JPKFileEntry(path.basename(filepath), normalizeName ? path.basename(filepath) : filepath, addedData[0], addedData[1], "", false, jds.name);
       this.numfiles++;
     };
 

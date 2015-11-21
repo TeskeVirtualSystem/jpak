@@ -91,14 +91,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     var u8 = new Uint8Array(buffer);
     var dv = new DataView(buffer);
 
-    dv.setUint32(buffer.byteLength-16, this.producerId);
-    dv.setUint32(buffer.byteLength-12, this.flags);
-    dv.setUint32(buffer.byteLength-8, this.userflags);
+    dv.setUint32(buffer.byteLength-16, this.producerId, true);
+    dv.setUint32(buffer.byteLength-12, this.flags, true);
+    dv.setUint32(buffer.byteLength-8, this.userflags, true);
 
     u8.putString(this.MAGIC);
     var fileTableOffset = u8.putString(0xC, volumeTable);
     u8.putString(fileTableOffset, fileTable);
-    dv.setUint32(buffer.byteLength-4, fileTableOffset);
+    dv.setUint32(buffer.byteLength-4, fileTableOffset, true);
 
     return buffer;
   };
