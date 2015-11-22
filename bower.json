@@ -6,12 +6,14 @@
     "Lucas Teske"
   ],
   "description": "JPAK is a multi-use Javascript Package System, developed for loading several files at once with only one package.",
-  "keywords" : [
-    "file system",
-    "distribuited",
-    "package"
+  "keywords": [
+    "file",
+    "system",
+    "distributed",
+    "package",
+    "packaging"
   ],
-  "dependencies" : {
+  "dependencies": {
     "q": "1.0.1"
   },
   "license": "MIT",
@@ -24,6 +26,12 @@
     "test",
     "tests",
     "spec",
-    "example"
+    "example",
+    "3rdparty"
+  ],
+  "main": "dist/jpak.min.js",
+  "moduleType": [
+    "globals",
+    "node"
   ]
 }
