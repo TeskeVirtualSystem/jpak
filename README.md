@@ -1,211 +1,156 @@
-         _ ____   _    _  __        _   ___  
-        | |  _ \ / \  | |/ / __   _/ | / _ \ 
-     _  | | |_) / _ \ | ' /  \ \ / / || | | |
-    | |_| |  __/ ___ \| . \   \ V /| || |_| |
-     \___/|_| /_/   \_\_|\_\   \_/ |_(_)___/ 
-
+         _ ____   _    _  __        ____    ___  
+        | |  _ \ / \  | |/ / __   _|___ \  / _ \ 
+     _  | | |_) / _ \ | ' /  \ \ / / __) || | | |
+    | |_| |  __/ ___ \| . \   \ V / / __/ | |_| |
+     \___/|_| /_/   \_\_|\_\   \_/ |_____(_)___/ 
+                                                 
 Description
-========
+===========
 
 **JPAK** is a multi-use Javascript Package System, developed for loading several files at once with only one package.
 
 For what this can be used?
-========
+==========================
 
 **JPAK** can be used for many things. From game assets to webpage assets. It makes easier to preload all images and resources that you need for website.
 
 What is done
 ========
-*   Javascript Loader
-*   Python Packer
-*   JPAK 1.0 Specification file
-*   Load progress event
-*   Get file as Base64
-*   Get file as HTML Data URI (for hide from Network Requests)
-*   GZIP Decompress Support, forked from https://github.com/jsxgraph/jsxgraph/
-*	Simple C# Windows Tool for Exploring and Export Content from JPAK Files
-*   C++ Extension
+* Javascript Loader / Packer for 2.0
+* Python Packer for 1.0
+* JPAK 1.0 Specification file
+* JPAK 2.0 Extended Specification file
+* Load progress event
+* Get file as Base64
+* Get file as HTML Data URI (for hide from Network Requests)
+* GZIP Decompress Support, forked from https://github.com/jsxgraph/jsxgraph/
+* Simple C# Windows Tool for Exploring and Export Content from JPAK Files (v1.0)
+* C++ Extension
+* Partial Loading of data
 
 TODO
 ========
-*   Load files from JPAK only when needed. A.K.A. - Fetch only the necessary parts from jpak file.
-*   Add option to compress files on packing.
-*	More stuff on JPAK Explorer for Windows
-*	JPAK Explorer for Linux
-*   Documents for C#, C++
-*   Zlib Decompress for C++
+* Add option to compress files on packing.
+* More stuff on JPAK Explorer for Windows
+* JPAK Explorer for Linux
+* Documents for C#, C++
+* Zlib Decompress for C++
+* C++ Library for JPAK 2.0 EXT
 
-How to use it
-========
+Generating JPAK1 Packages
+=============
 
 **JPAK** is made to be simple. You can use for any file you want. First, you need to create a JPAK package.
-
-You can use the python script called **packer.py** at `packer` folder. The sintax is simple, just create a folder and thrown what you want on that package inside it.
+You can use the python script called **packer.py** at `tools` folder. The sintax is simple, just create a folder and thrown what you want on that package inside it.
 
 ```shellscript
-python packer.py PackageFolder
+python packer1.py PackageFolder
 ```
-
 This will generate a file called `PackageFolder.jpak`, with that we can try it at web.
 
-For the webpage, you need to create a JPAK.jpakloader object with a `file` parameter for it, pointing to the package file, and set a onload function.
-```javascript
-var Package = new JPAK.jpakloader({"file" : "PackageFolder.jpak"});
-Package.onload = function()   {
-    alert("Package loaded!");
-};
+Generating JPAK 2 Ext (JMS) Packages
+====================================
+
+For creating a **JMS** package you should use the `extpacker.js` inside the tools folder like below:
+```shellscript
+./extpacker.js package.jms volume.jds folder/*
 ```
 
-After that, you need to call the load function, to start loading the file. At the end of processing, it will execute the `onload` function (if it has been defined).
+This should generate a metadata file called `package.jms`, a data storage volume called `volume.jds` using contents of `folder`. Everytime you load this package, you will load the `package.jms` file, that will point out where are the volumes and which files are inside. 
 
-```javascript
-Package.Load();
+You can append data to a JMS by running the same command again with another volume:
+```shellscript
+./extpacker.js package.jms volume2.jds folder2/*
 ```
 
-By that, you are ready to use it and get the files. I will show two examples of how you can manage files. One image, and one text.
+Using the Webloader
+===================
 
-You have two functions to get files.
+When implementing the new Web Loader (for both JPAK1 and JMS) we decided to change the way it works to be more usefull and work for both files. This broke the compatibility with the older JPAK Loader, so if you are upgrading it, you will need to change how it works.
+
+First you need to initialize a loader by doing:
 
 ```javascript
-jpakloader.GetFile(path, type)
+var myJpakLoader = new JPAK.Loader({"file" : "packtest.jms"}); // you can do the same thing for a jpak file just by replacing the file name.
+```
+
+Then you can make the loader start loading metadata and filling the object and use a promise to get the callback when its done.
+```javascript
+myJpakLoader.load().then(function() {
+// Called when its loaded
+});
+```
+
+So after it is loaded, you can load files in the old loader fashion:
+```javascript
+myJpakLoader.load().then(function() {
+// Called when its loaded
+    myJpakLoader.getFileURL("/img/python-logo-official.png", "image/png").then(function(data) {
+      $("body").append('<BR>/img/python-logo-official.png: <BR><BR> <img src="'+data+'">');
+      console.log("Loaded /img/python-logo-official.png");
+    });
+});
+```
+
+API
+===
+
+You have about the same calls as the older loader, but in a promise way.
+```javascript
+myJpakLoader.getFile(path, type).then(function (data) {
+    // data is a BLOB
+});
 ```
 Arguments: 
 *   `path`      -> That is the relative path to the package. If the file before packaging was at `PackageFolder/test.jpg` here you would put `/test.jpg`
 *   `type`      -> The mimetype of the file. Used in construction of the blob. Defaults to `application/octet-stream`
-*   `returns`   -> Returns a blob file with the contents of the file
 
 ```javascript
-jpakloader.GetFileURL(path, type)
+myJpakLoader.getFileURL(path, type).then(function(url) {
+    //  url is a URL to local blob content
+});
 ```
-*   Same as GetFile, but returns a local `URL` to the blob content.
 
 So basicly, for images you can do something like:
 
 ```javascript
-var imagetest = Package.GetFileURL("/test.jpg", "image/jpeg"); 
-$("body").append('<img src="'+imagetest+'">');
+myJpakLoader.getFileURL("/test.jpg", "image/jpeg").then(function(url) {
+    $("body").append('<img src="'+url+'">');
+});
 ```
 
 and you can do for HTML (text/plain) for example:
 
 ```javascript
-var testdothtml = Package.GetFile("/test.html", "text/html");
-var reader = new FileReader();
-reader.onloadend = function(evt)  {
-    $("body").append(evt.target.result);
-};
-reader.readAsText(testdothtml);
+myJpakLoader.getFile("/test.html", "text/html").then(function(data) {
+  var reader = new FileReader();
+  reader.onloadend = function(evt)  {
+      $("body").append('<BR>/test.html:<BR><BR>'+evt.target.result);   
+  };
+  reader.readAsText(data);
+});
 ```
 
+Compiling the Library / Running Examples
+=====================
+There is a already minified version at `dist/jpak.min.js` but if you want to compile by yourself or run the examples locally, you can do:
 
-Class
-========
-
-The **JPAK** script has a few features. It caches the already loaded blobs to reduce the memory load, for example.
-Here are few functions for now:
-
-```javascript
-jpakloader.ls(path)
+```shellscript
+npm install
+npm install -g bower
+npm install -g grunt-cli
+bower install
+sudo grunt dev
 ```
 
-Lists the content of the path
+This should setup a local enviroment for testing the JPAK Library. Then you can open in your browser `http://localhost:8082/test/` to see the examples.
 
-Arguments: 
-*   `path`      -> The path you want to list
-*   `returns`   -> Returns an object `{ "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }`
-
-```javascript
-jpakloader.GetFile(path, type)
+If you just want to build it, do the same as before, but instead `sudo grunt dev` do:
+```shellscript
+grunt concat uglify
 ```
 
-Return a blob of the file
-
-Arguments: 
-*   `path`      -> The file path to get
-*   `type`      -> The mime type. Defaults to  **application/octet-binary**
-*   `returns`   -> Returns an blob
-
-```javascript
-jpakloader.GetFileURL(path, type)
-```
-
-Return a Blob URL to embed as resource.
-
-Arguments: 
-*   `path`      -> The file path to get
-*   `type`      -> The mime type. Defaults to  **application/octet-binary**
-*   `returns`   -> Returns an string containing the Blob Data URL
-
-```javascript
-jpakloader.GetFileArrayBuffer(path, type)
-```
-
-Return an ArrayBuffer with contents of the file
-
-Arguments: 
-*   `path`      -> The file path to get
-*   `type`      -> The mime type. Not used directly for this function, but for cache. Defaults to  **application/octet-binary**
-*   `returns`   -> Returns an ArrayBuffer with contents of the file
-
-
-
-```javascript
-jpakloader.GetBase64File(path, type)
-```
-
-Return a Base64 Encoded Data from the File
-
-Arguments: 
-*   `path`      -> The file path to get
-*   `type`      -> The mime type. Not used directly for this function, but for cache. Defaults to  **application/octet-binary**
-*   `returns`   -> Returns an string of Base64 Encoded data.
-
-```javascript
-jpakloader.GetHTMLDataURIFile(path, type, encoding)
-```
-
-Return a HTML Data URI to embed as resource.
-This is useful if you want to hide the image load process inside the script, as the browser doesn`t make network requests.
-
-Arguments: 
-*   `path`      -> The file path to get
-*   `type`      -> The mime type. Defaults to  **application/octet-binary**
-*   `encoding`  -> The Encoding of the file. *Optional*
-*   `returns`   -> Returns an string of HTML Data URI in format: `data:[<MIME-type>][;charset=<encoding>][;base64],<data>`
-
-Events:
-========
-
-*   `onload`    ->  Executed when the **jpackloader** ends loading the JPAK file
-*   `onprogress`->  Executed when new progress is available. It has one object argument `{"loaded":loadedbytes,"total":totalbytes,"percent": percentComplete}`
-*   `onerror`   ->  Executed when an error has ocurred.  It has one object argument `{"text": errormessage, "errorcode": errorcode}` - The Error Code can be HTML error or `jpakloader` specific error.
-
-JPAK Loader Error Codes:
-========
-
-*   100->600    -   HTML Status Code. Consult **RFC-2616** for details.
-*   8000        -   Wrong file magic
-
-
-GZIP Support:
-========
-
-The GZIP Decompress support is a modified version of **zip.js** from https://github.com/jsxgraph/jsxgraph/ project. For now, the default behaviour of `jpakloader` is to check the `compressed` flag at file entry. If its true, it tryes to decompress the file. 
-For **zip.js** license, consult the file or the JSXGraph Github
-
-For compatible GZIPPing a file on Python you can do:
-```python
-import zlib
-f = open("uncompressed", "rb")
-data = f.read()
-f.close()
-data = zlib.compress(data, 9)   # Level 9 is important
-f = open("compressed", "wb")
-f.write(data)
-f.close()
-```
-
-*   TODO on Tools: Add option to compress files on packer.py
+This will generate the minified version `jpak.min.js` and the non-minified version `jpak.js`.
 
 C# JPAK Tool:
 ========
