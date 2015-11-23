@@ -119,6 +119,110 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     };
 
     JPAK.Tools.DataLoader = DataLoader;
+  } else {
+    var fs = require('fs');
+    if (typeof Q === undefined)
+      Q = require('q');
+
+    var NodeDataLoader = function(parameters) {
+      var _this = this;
+      this.url = parameters.url;
+      this.partial = parameters.partial  || false;
+      this.partialFrom = parameters.partialFrom || 0;
+      this.partialTo = parameters.partialTo || 0;
+      this.fetchSize = parameters.fetchSize || false;
+
+      this.callbacks = {
+        "load" : [],
+        "error" : []
+      };
+    };
+
+    NodeDataLoader.prototype._reportError = function(error) {
+      for (var cb in this.callbacks.error)
+        this.callbacks.error[cb](error); 
+      this.def.reject(error);
+    };
+
+    NodeDataLoader.prototype._reportLoad = function(data) {
+      for (var cb in this.callbacks.load)
+        this.callbacks.load[cb](data);
+      this.def.resolve(data);
+    };
+
+    NodeDataLoader.prototype.start = function() {
+      this.def = Q.defer();
+      var _this = this;
+      if (this.fetchSize) {
+        fs.stat(_this.url, function(err, stats) {
+          if (err) {
+            _this.def.reject(err);
+            _this._reportError({"text":"Error loading file!"+err});
+          } else {
+            _this.def.resolve(stats.size);
+            _this._reportLoad(stats.size);
+          }
+        });
+      } else {
+        (function() {
+          var def = Q.defer();
+          fs.open(_this.url, "r", function(err, fd) {
+            if (err) {
+              _this.def.reject(err);
+              def.reject(err);
+            } else
+              def.resolve(fd);
+          });
+          return def.promise;
+        })().then(function(fd) {
+          var def = Q.defer();
+          (function() {
+            var sizeDef = Q.defer();
+            if (_this.partial) {
+              sizeDef.resolve(_this.partialTo-_this.partialFrom+1);
+            } else {
+              fs.fstat(fd, function(err, stats) {
+                if (err)
+                  sizeDef.reject(err);
+                else
+                  sizeDef.resolve(stats.size);
+              });
+            }
+            return sizeDef.promise;
+          })().then(function(readsize) {
+            var loadDef = Q.defer();
+            var buffer = new Buffer(readsize);
+            var position = _this.partial ? _this.partialFrom : 0;
+            fs.read(fd, buffer, 0, readsize, position, function(err, bytesRead, buffer) {
+              if (err)
+                loadDef.reject(err);
+              else
+                loadDef.resolve(buffer);
+            });
+            return loadDef.promise;
+          }).then(function(data) {
+            def.resolve(JPAK.Tools.toArrayBuffer(data));
+            _this._reportLoad(JPAK.Tools.toArrayBuffer(data));
+          }).catch(function(err) {
+            def.reject(err);
+            _this._reportError({"text":"Error loading file!"+err});
+          });
+
+          return def.promise;
+        });
+      }
+
+      return this.def.promise;
+    };
+
+    NodeDataLoader.prototype.on = function(event, cb) {
+      if (event in this.callbacks) 
+        this.callbacks[event].push(function(data) {
+          cb(data);
+        });
+    };
+
+    JPAK.Tools.DataLoader = NodeDataLoader;
   }
 
 })();

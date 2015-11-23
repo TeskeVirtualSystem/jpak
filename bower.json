@@ -1,6 +1,6 @@
 {
   "name": "JPAK",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "homepage": "https://github.com/TeskeVirtualSystem/jpak",
   "authors": [
     "Lucas Teske"
@@ -22,6 +22,8 @@
     "node_modules",
     "bower_components",
     "cpp",
+    "jssrc",
+    "tools",
     "doc",
     "test",
     "tests",

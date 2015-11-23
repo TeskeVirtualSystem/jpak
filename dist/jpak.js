@@ -2291,6 +2291,110 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     };
 
     JPAK.Tools.DataLoader = DataLoader;
+  } else {
+    var fs = require('fs');
+    if (typeof Q === undefined)
+      Q = require('q');
+
+    var NodeDataLoader = function(parameters) {
+      var _this = this;
+      this.url = parameters.url;
+      this.partial = parameters.partial  || false;
+      this.partialFrom = parameters.partialFrom || 0;
+      this.partialTo = parameters.partialTo || 0;
+      this.fetchSize = parameters.fetchSize || false;
+
+      this.callbacks = {
+        "load" : [],
+        "error" : []
+      };
+    };
+
+    NodeDataLoader.prototype._reportError = function(error) {
+      for (var cb in this.callbacks.error)
+        this.callbacks.error[cb](error); 
+      this.def.reject(error);
+    };
+
+    NodeDataLoader.prototype._reportLoad = function(data) {
+      for (var cb in this.callbacks.load)
+        this.callbacks.load[cb](data);
+      this.def.resolve(data);
+    };
+
+    NodeDataLoader.prototype.start = function() {
+      this.def = Q.defer();
+      var _this = this;
+      if (this.fetchSize) {
+        fs.stat(_this.url, function(err, stats) {
+          if (err) {
+            _this.def.reject(err);
+            _this._reportError({"text":"Error loading file!"+err});
+          } else {
+            _this.def.resolve(stats.size);
+            _this._reportLoad(stats.size);
+          }
+        });
+      } else {
+        (function() {
+          var def = Q.defer();
+          fs.open(_this.url, "r", function(err, fd) {
+            if (err) {
+              _this.def.reject(err);
+              def.reject(err);
+            } else
+              def.resolve(fd);
+          });
+          return def.promise;
+        })().then(function(fd) {
+          var def = Q.defer();
+          (function() {
+            var sizeDef = Q.defer();
+            if (_this.partial) {
+              sizeDef.resolve(_this.partialTo-_this.partialFrom+1);
+            } else {
+              fs.fstat(fd, function(err, stats) {
+                if (err)
+                  sizeDef.reject(err);
+                else
+                  sizeDef.resolve(stats.size);
+              });
+            }
+            return sizeDef.promise;
+          })().then(function(readsize) {
+            var loadDef = Q.defer();
+            var buffer = new Buffer(readsize);
+            var position = _this.partial ? _this.partialFrom : 0;
+            fs.read(fd, buffer, 0, readsize, position, function(err, bytesRead, buffer) {
+              if (err)
+                loadDef.reject(err);
+              else
+                loadDef.resolve(buffer);
+            });
+            return loadDef.promise;
+          }).then(function(data) {
+            def.resolve(JPAK.Tools.toArrayBuffer(data));
+            _this._reportLoad(JPAK.Tools.toArrayBuffer(data));
+          }).catch(function(err) {
+            def.reject(err);
+            _this._reportError({"text":"Error loading file!"+err});
+          });
+
+          return def.promise;
+        });
+      }
+
+      return this.def.promise;
+    };
+
+    NodeDataLoader.prototype.on = function(event, cb) {
+      if (event in this.callbacks) 
+        this.callbacks[event].push(function(data) {
+          cb(data);
+        });
+    };
+
+    JPAK.Tools.DataLoader = NodeDataLoader;
   }
 
 })();
@@ -2709,16 +2813,376 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  var JPKVolumeEntry = function(filename) {
-    this.filename = filename;
+  var inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined'); 
+  if (inNode)
+    Q = require('q');
+
+  var Loader = function(parameters) {
+    if(parameters !== undefined)
+        this.jpakfile = parameters.file;
+
+    this.tableLoaded = false;
   };
 
-  JPKVolumeEntry.prototype.toObject = JPAK.Generics.genericToObject;
-  JPKVolumeEntry.prototype.fromObject = JPAK.Generics.genericFromObject;
-  JPKVolumeEntry.prototype.jToJSON = JPAK.Generics.genericjToJSON;
-  JPKVolumeEntry.prototype.jFromJSON = JPAK.Generics.genericjFromJSON;
+  Loader.prototype._proceedJPAK1 = function() {
+    var _this = this;
+    JPAK.Tools.d("JPAK1 Format");
+    this.jpakType = "JPAK1";
+    return this._p_getFileSize().then(function(){return _this._p_jpak1_loadFileTable();});
+  };
 
-  JPAK.Classes.JPKVolumeEntry = JPKVolumeEntry;
+  Loader.prototype._proceedJMS1 = function() {
+    var _this = this;
+    this.jpakType = "JMS";
+    JPAK.Tools.d("JMS1 Format");
+    return this._p_getFileSize().then(function(){return _this._p_jms1_loadFileTable();});
+  };
+
+  Loader.prototype.checkMagic = function(magic) {
+    var Magic0 = (new Uint8Array(magic.slice(0,4))).asString();
+    var Magic1 = (new Uint8Array(magic.slice(0,5))).asString();
+
+    if (JPAK.Constants.MAGIC_TYPE.hasOwnProperty(Magic0)) 
+      return JPAK.Constants.MAGIC_TYPE[Magic0];
+    else if (JPAK.Constants.MAGIC_TYPE.hasOwnProperty(Magic1))
+      return JPAK.Constants.MAGIC_TYPE[Magic1];
+    else
+      return null;
+  };
+
+  Loader.prototype.load = function() {
+    var _this = this;
+
+    var MagicLoader = new JPAK.Tools.DataLoader({
+      url: this.jpakfile,
+      partial: true,
+      partialFrom: 0,
+      partialTo: 5
+    });
+
+    return MagicLoader.start().then(function(data) {
+      var def = Q.defer();
+      var version = _this.checkMagic(data);
+      JPAK.Tools.d("Version: "+version);
+      switch(version) {
+        case JPAK.Constants.MAGIC_TYPE.JPAK1: return _this._proceedJPAK1();
+        case JPAK.Constants.MAGIC_TYPE.JMS1: return _this._proceedJMS1();
+        case null:
+          JPAK.Tools.e("Invalid magic!");
+          def.reject(); // TODO: Error passing
+          break;
+        default:
+          JPAK.Tools.e("Invalid Magic Type to load: "+JPAK.Constants.REVERSE_MAGIC_TYPE[version]);
+          def.reject(); // TODO: Error passing
+      }
+      return def.promise;
+    });
+  };
+
+  /**
+   * Gets the directory entry if exists.
+   * Returns null if not found
+   */
+  Loader.prototype.findDirectoryEntry = function(path)   {
+    var base = this.fileTable;
+    if(this.tableLoaded) {
+      if(path !== "/") {
+        path = JPAK.Tools.cleanArray(path.split("/"), "");
+        var dir = "", ok = true;
+        for(var i=0;i<path.length;i++)    {
+          dir = path[i];
+          if(dir in base.directories)  
+            base = base.directories[dir]; 
+          else{
+            ok = false;
+            break;
+          }
+        }
+        if(!ok)
+          base = null;        
+      }
+    }
+    return base;
+  };
+
+  /**
+   * Gets the file entry if exists.
+   * Returns null if not found
+   */
+  Loader.prototype.findFileEntry = function(path)    {
+    var pathblock = JPAK.Tools.cleanArray(path.split("/"), "");
+    var filename  = pathblock[pathblock.length-1];
+    path = path.replace(filename,"");
+    var base = this.findDirectoryEntry(path);
+    if(base !== undefined)   
+      if(filename in base.files)  
+        return base.files[filename];
+    return undefined;
+  };
+
+  /**
+   * Lists the dir returning an object like:
+   * { "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }
+   */
+  Loader.prototype.ls = function(path)   {
+    var out = { "files" : [], "dirs" : [] };
+    if(this.tableLoaded) {
+      var base = this.findDirectoryEntry(path);
+      if(base !== undefined)  {
+        for(var i in base.files)
+          out.files.push(base.files[i]);
+        for(i in base.directories)
+          out.dirs.push({"name" : base.directories[i].name, "numfiles": base.directories[i].numfiles});
+      }else
+        out.error = "Directory not found!";
+             
+    }else
+      out.error = "Not loaded";   
+    return out;
+  };
+
+  Loader.prototype.getFile = function(path, type)  {
+    var def = Q.defer();
+
+    switch (this.jpakType) {
+      case "JPAK1": return this._p_jpak1_getFileBlob(path, type);
+      case "JMS": return this._p_jms1_getFileBlob(path, type);
+      default: def.reject("Not a valid jpak file!"); 
+    }
+
+    return def.promise;
+  };
+
+  Loader.prototype.getFileArrayBuffer = function(path, type) {
+    var def = Q.defer();
+
+    switch (this.jpakType) {
+      case "JPAK1": return this._p_jpak1_getFile(path, type);
+      case "JMS": return this._p_jms1_getFile(path, type);
+      default: def.reject("Not a valid jpak file!"); 
+    }
+
+    return def.promise;
+  };
+
+  Loader.prototype.getBase64File = function(path, type) {
+    var def = Q.defer();
+    this.getFileArrayBuffer(path, type).then(function(data) {
+      def.resolve(JPAK.Tools.ArrayBufferToBase64(data));
+    }).fail(function(error) {
+      def.reject(error);
+    });
+
+    return def.promise;
+  };
+
+  if (!inNode) {
+    Loader.prototype.getHTMLDataURIFile = function(path, type, encoding) {
+      var def = Q.defer();
+      this.getBase64File(path, type).then(function(data) {
+        // HTML Data URI Format: data:[<MIME-type>][;charset=<encoding>][;base64],<data>
+        if(data === undefined)
+          def.reject("Data is undefined!");
+            
+        if(encoding !== undefined && encoding !== null)
+          def.resolve("data:"+type+";charset="+encoding+";base64,"+data);
+        else
+          def.resolve("data:"+type+";base64,"+data);
+      });
+
+      return def.promise;
+    };
+    
+    Loader.prototype.getFileURL = function(path, type) {
+      return this.getFile(path, type).then(function(blob) {
+        var def = Q.defer();
+        if (blob !== undefined) 
+          def.resolve(URL.createObjectURL(blob));
+        else {
+          JPAK.Tools.e("Error: Cannot find file: \""+path+"\"");
+          def.reject("Error: Cannot find file: \""+path+"\"");
+        }
+        return def.promise;
+      });
+    };
+  }
+
+  /** Promises **/
+
+  Loader.prototype._p_getFileSize = function() {
+    var _this = this;
+    var SizeLoader = new JPAK.Tools.DataLoader({
+      url: this.jpakfile,
+      fetchSize: true
+    });
+
+    return SizeLoader.start().then(function(size) {
+      var def = Q.defer();
+      _this.fileSize = size;
+      JPAK.Tools.d("File Size: "+size);
+      def.resolve(size);
+      return def.promise;
+    });
+  };
+
+  Loader.prototype._p_jpak1_loadFileTable = function() {
+    var _this = this;
+    var tableOffsetLoader = new JPAK.Tools.DataLoader({
+      url: this.jpakfile,
+      partial: true,
+      partialFrom: this.fileSize-4,
+      partialTo: this.fileSize
+    });
+
+    return tableOffsetLoader.start().then(function(data) {
+      _this.fileTableOffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
+      var fileTableLoader = new JPAK.Tools.DataLoader({
+        url: _this.jpakfile,
+        partial: true,
+        partialFrom: _this.fileTableOffset,
+        partialTo: _this.fileSize - 5
+      });
+
+      return fileTableLoader.start();
+    }).then(function(data) {
+      var def = Q.defer();
+      data = (new Uint8Array(data)).asString();
+      try {
+        _this.fileTable = JSON.parse(data);
+        _this.tableLoaded = true;
+        def.resolve(_this.fileTable);
+      } catch (e) {
+        def.reject(e);
+      }
+      return def.promise;
+    });
+  };
+
+  Loader.prototype._p_jpak1_getFile = function(path, type) {
+    var def = Q.defer();
+    var file = this.findFileEntry(path);
+    type = type || 'application/octet-binary';
+
+    var fileLoader = new JPAK.Tools.DataLoader({
+      url: this.jpakfile,
+      partial: true,
+      partialFrom: file.offset,
+      partialTo: file.offset + file.size -1
+    });
+
+    fileLoader.start().then(function(data) {
+      if(file.compressed !== undefined && file.compressed)
+        data = JPAK.Tools.GZ.decompress(data);
+      def.resolve(data);
+    }).fail(function(error) {
+      def.reject(error);
+    });
+
+    return def.promise;
+  };
+
+  Loader.prototype._p_jpak1_getFileBlob = function(path, type) {
+    var def = Q.defer();
+
+    this._p_jpak1_getFile(path, type).then(function (data) {
+      var ret = new Uint8Array(data).buffer;
+      if (!inNode)
+        ret = new Blob([ret], {"type":type});
+      def.resolve(ret);
+    }).fail(function(error) {
+      def.reject(error);
+    });
+
+    return def.promise;
+  };
+
+  Loader.prototype._p_jms1_loadFileTable = function() {
+    var _this = this;
+    var tableOffsetLoader = new JPAK.Tools.DataLoader({
+      url: this.jpakfile,
+      partial: true,
+      partialFrom: this.fileSize-4,
+      partialTo: this.fileSize
+    });
+
+    return tableOffsetLoader.start().then(function(data) {
+      _this.fileTableOffset = new DataView(data).getUint32(0, true);
+      var fileTableLoader = new JPAK.Tools.DataLoader({
+        url: _this.jpakfile,
+        partial: true,
+        partialFrom: _this.fileTableOffset,
+        partialTo: _this.fileSize - 16 -1
+      });
+
+      return fileTableLoader.start();
+    }).then(function(data) {
+      data = (new Uint8Array(data)).asString();
+      _this.fileTable = JSON.parse(data);
+      _this.tableLoaded = true;
+
+      var volumeTableLoader = new JPAK.Tools.DataLoader({
+        url: _this.jpakfile,
+        partial: true,
+        partialFrom: 0xC,
+        partialTo: _this.fileTableOffset -1
+      });
+
+      return volumeTableLoader.start();
+
+    }).then(function(data) {
+      var def = Q.defer();
+      data = (new Uint8Array(data)).asString();
+      _this.volumeTable = JSON.parse(data);
+      _this.volumeTableLoaded = true;
+      def.resolve(_this.fileTable);
+      return def.promise;        
+    });
+  };
+
+  Loader.prototype._p_jms1_getFile = function(path, type) {
+    var def = Q.defer();
+    var file = this.findFileEntry(path);
+    type = type || 'application/octet-binary';
+
+    if (file.volume in this.volumeTable) {
+      var volumePath = this.volumeTable[file.volume].filename;
+      var fileLoader = new JPAK.Tools.DataLoader({
+        url: volumePath,
+        partial: true,
+        partialFrom: file.offset,
+        partialTo: file.offset + file.size -1
+      });
+
+      fileLoader.start().then(function(data) {
+        if(file.compressed !== undefined && file.compressed)
+          data = JPAK.Tools.GZ.decompress(data);
+        def.resolve(data);
+      }).fail(function(error) {
+        def.reject(error);
+      });
+    } else {
+      def.reject("Volume \""+file.volume+"\" not found!");
+    }
+
+    return def.promise;
+  };
+
+  Loader.prototype._p_jms1_getFileBlob = function(path, type) {
+    var def = Q.defer();
+
+    this._p_jms1_getFile(path, type).then(function (data) {
+      var ret = new Uint8Array(data).buffer;
+      if (!inNode)
+        ret = new Blob([ret], {"type":type});
+      def.resolve(ret);
+    }).fail(function(error) {
+      def.reject(error);
+    });
+
+    return def.promise;
+  };
+
+  JPAK.Loader = Loader;
 
 })();
 /**
@@ -2756,371 +3220,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  var inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined'); 
-  if (!inNode) {
-    var Loader = function(parameters) {
+  var JPKVolumeEntry = function(filename) {
+    this.filename = filename;
+  };
 
-      if(parameters !== undefined)    {
-          this.jpakfile = parameters.file;
-          this.loadall  = parameters.loadall || false;    //  TODO: Implement the fetch-on-need feature
-      }
+  JPKVolumeEntry.prototype.toObject = JPAK.Generics.genericToObject;
+  JPKVolumeEntry.prototype.fromObject = JPAK.Generics.genericFromObject;
+  JPKVolumeEntry.prototype.jToJSON = JPAK.Generics.genericjToJSON;
+  JPKVolumeEntry.prototype.jFromJSON = JPAK.Generics.genericjFromJSON;
 
-      this.tableLoaded = false;
-    };
-
-    Loader.prototype._proceedJPAK1 = function() {
-      var _this = this;
-      JPAK.Tools.d("JPAK1 Format");
-      this.jpakType = "JPAK1";
-      return this._p_getFileSize().then(function(){return _this._p_jpak1_loadFileTable();});
-    };
-
-    Loader.prototype._proceedJMS1 = function() {
-      var _this = this;
-      this.jpakType = "JMS";
-      JPAK.Tools.d("JMS1 Format");
-      return this._p_getFileSize().then(function(){return _this._p_jms1_loadFileTable();});
-    };
-
-    Loader.prototype.checkMagic = function(magic) {
-      var Magic0 = (new Uint8Array(magic.slice(0,4))).asString();
-      var Magic1 = (new Uint8Array(magic.slice(0,5))).asString();
-
-      if (JPAK.Constants.MAGIC_TYPE.hasOwnProperty(Magic0)) 
-        return JPAK.Constants.MAGIC_TYPE[Magic0];
-      else if (JPAK.Constants.MAGIC_TYPE.hasOwnProperty(Magic1))
-        return JPAK.Constants.MAGIC_TYPE[Magic1];
-      else
-        return null;
-    };
-
-    Loader.prototype.load = function() {
-      var _this = this;
-
-      var MagicLoader = new JPAK.Tools.DataLoader({
-        url: this.jpakfile,
-        partial: true,
-        partialFrom: 0,
-        partialTo: 5
-      });
-
-      return MagicLoader.start().then(function(data) {
-        var def = Q.defer();
-        var version = _this.checkMagic(data);
-        JPAK.Tools.d("Version: "+version);
-        switch(version) {
-          case JPAK.Constants.MAGIC_TYPE.JPAK1: return _this._proceedJPAK1();
-          case JPAK.Constants.MAGIC_TYPE.JMS1: return _this._proceedJMS1();
-          case null:
-            JPAK.Tools.e("Invalid magic!");
-            def.reject(); // TODO: Error passing
-            break;
-          default:
-            JPAK.Tools.e("Invalid Magic Type to load: "+JPAK.Constants.REVERSE_MAGIC_TYPE[version]);
-            def.reject(); // TODO: Error passing
-        }
-        return def.promise;
-      });
-    };
-
-    /**
-     * Gets the directory entry if exists.
-     * Returns null if not found
-     */
-    Loader.prototype.findDirectoryEntry = function(path)   {
-      var base = this.fileTable;
-      if(this.tableLoaded) {
-        if(path !== "/") {
-          path = JPAK.Tools.cleanArray(path.split("/"), "");
-          var dir = "", ok = true;
-          for(var i=0;i<path.length;i++)    {
-            dir = path[i];
-            if(dir in base.directories)  
-              base = base.directories[dir]; 
-            else{
-              ok = false;
-              break;
-            }
-          }
-          if(!ok)
-            base = null;        
-        }
-      }
-      return base;
-    };
-
-    /**
-     * Gets the file entry if exists.
-     * Returns null if not found
-     */
-    Loader.prototype.findFileEntry = function(path)    {
-      var pathblock = JPAK.Tools.cleanArray(path.split("/"), "");
-      var filename  = pathblock[pathblock.length-1];
-      path = path.replace(filename,"");
-      var base = this.findDirectoryEntry(path);
-      if(base !== undefined)   
-        if(filename in base.files)  
-          return base.files[filename];
-      return undefined;
-    };
-
-    /**
-     * Lists the dir returning an object like:
-     * { "dirs" : [ arrayofdirs ], "files" : [ arrayoffiles ], "error" : "An error message, if happens" }
-     */
-    Loader.prototype.ls = function(path)   {
-      var out = { "files" : [], "dirs" : [] };
-      if(this.tableLoaded) {
-        var base = this.findDirectoryEntry(path);
-        if(base !== undefined)  {
-          for(var i in base.files)
-            out.files.push(base.files[i]);
-          for(i in base.directories)
-            out.dirs.push({"name" : base.directories[i].name, "numfiles": base.directories[i].numfiles});
-        }else
-          out.error = "Directory not found!";
-               
-      }else
-        out.error = "Not loaded";   
-      return out;
-    };
-
-    Loader.prototype.getFile = function(path, type)  {
-      var def = Q.defer();
-
-      switch (this.jpakType) {
-        case "JPAK1": return this._p_jpak1_getFileBlob(path, type);
-        case "JMS": return this._p_jms1_getFileBlob(path, type);
-        default: def.reject("Not a valid jpak file!"); 
-      }
-
-      return def.promise;
-    };
-
-    Loader.prototype.getFileURL = function(path, type) {
-      return this.getFile(path, type).then(function(blob) {
-        var def = Q.defer();
-        if (blob !== undefined) 
-          def.resolve(URL.createObjectURL(blob));
-        else {
-          JPAK.Tools.e("Error: Cannot find file: \""+path+"\"");
-          def.reject("Error: Cannot find file: \""+path+"\"");
-        }
-        return def.promise;
-      });
-    };
-
-    Loader.prototype.getFileArrayBuffer = function(path, type) {
-      var def = Q.defer();
-
-      switch (this.jpakType) {
-        case "JPAK1": return this._p_jpak1_getFile(path, type);
-        case "JMS": return this._p_jms1_getFile(path, type);
-        default: def.reject("Not a valid jpak file!"); 
-      }
-
-      return def.promise;
-    };
-
-    Loader.prototype.getBase64File = function(path, type) {
-      var def = Q.defer();
-      this.getFileArrayBuffer(path, type).then(function(data) {
-        def.resolve(JPAK.Tools.ArrayBufferToBase64(data));
-      }).fail(function(error) {
-        def.reject(error);
-      });
-
-      return def.promise;
-    };
-
-    Loader.prototype.getHTMLDataURIFile = function(path, type, encoding) {
-      var def = Q.defer();
-      this.getBase64File(path, type).then(function(data) {
-        // HTML Data URI Format: data:[<MIME-type>][;charset=<encoding>][;base64],<data>
-        if(data === undefined)
-          def.reject("Data is undefined!");
-            
-        if(encoding !== undefined && encoding !== null)
-          def.resolve("data:"+type+";charset="+encoding+";base64,"+data);
-        else
-          def.resolve("data:"+type+";base64,"+data);
-      });
-
-      return def.promise;
-    };
-
-    /** Promises **/
-
-    Loader.prototype._p_getFileSize = function() {
-      var _this = this;
-      var SizeLoader = new JPAK.Tools.DataLoader({
-        url: this.jpakfile,
-        fetchSize: true
-      });
-
-      return SizeLoader.start().then(function(size) {
-        var def = Q.defer();
-        _this.fileSize = size;
-        JPAK.Tools.d("File Size: "+size);
-        def.resolve(size);
-        return def.promise;
-      });
-    };
-
-    Loader.prototype._p_jpak1_loadFileTable = function() {
-      var _this = this;
-      var tableOffsetLoader = new JPAK.Tools.DataLoader({
-        url: this.jpakfile,
-        partial: true,
-        partialFrom: this.fileSize-4,
-        partialTo: this.fileSize
-      });
-
-      return tableOffsetLoader.start().then(function(data) {
-        _this.fileTableOffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
-        var fileTableLoader = new JPAK.Tools.DataLoader({
-          url: _this.jpakfile,
-          partial: true,
-          partialFrom: _this.fileTableOffset,
-          partialTo: _this.fileSize - 5
-        });
-
-        return fileTableLoader.start();
-      }).then(function(data) {
-        var def = Q.defer();
-        data = (new Uint8Array(data)).asString();
-        try {
-          _this.fileTable = JSON.parse(data);
-          _this.tableLoaded = true;
-          def.resolve(_this.fileTable);
-        } catch (e) {
-          def.reject(e);
-        }
-        return def.promise;
-      });
-    };
-
-    Loader.prototype._p_jpak1_getFile = function(path, type) {
-      var def = Q.defer();
-      var file = this.findFileEntry(path);
-      type = type || 'application/octet-binary';
-
-      var fileLoader = new JPAK.Tools.DataLoader({
-        url: this.jpakfile,
-        partial: true,
-        partialFrom: file.offset,
-        partialTo: file.offset + file.size -1
-      });
-
-      fileLoader.start().then(function(data) {
-        if(file.compressed !== undefined && file.compressed)
-          data = JPAK.Tools.GZ.decompress(data);
-        def.resolve(data);
-      }).fail(function(error) {
-        def.reject(error);
-      });
-
-      return def.promise;
-    };
-
-    Loader.prototype._p_jpak1_getFileBlob = function(path, type) {
-      var def = Q.defer();
-
-      this._p_jpak1_getFile(path, type).then(function (data) {
-        def.resolve(new Blob([new Uint8Array(data).buffer], {"type":type}));
-      }).fail(function(error) {
-        def.reject(error);
-      });
-
-      return def.promise;
-    };
-
-    Loader.prototype._p_jms1_loadFileTable = function() {
-      var _this = this;
-      var tableOffsetLoader = new JPAK.Tools.DataLoader({
-        url: this.jpakfile,
-        partial: true,
-        partialFrom: this.fileSize-4,
-        partialTo: this.fileSize
-      });
-
-      return tableOffsetLoader.start().then(function(data) {
-        _this.fileTableOffset = new DataView(data).getUint32(0, true);
-        var fileTableLoader = new JPAK.Tools.DataLoader({
-          url: _this.jpakfile,
-          partial: true,
-          partialFrom: _this.fileTableOffset,
-          partialTo: _this.fileSize - 16 -1
-        });
-
-        return fileTableLoader.start();
-      }).then(function(data) {
-        data = (new Uint8Array(data)).asString();
-        _this.fileTable = JSON.parse(data);
-        _this.tableLoaded = true;
-
-        var volumeTableLoader = new JPAK.Tools.DataLoader({
-          url: _this.jpakfile,
-          partial: true,
-          partialFrom: 0xC,
-          partialTo: _this.fileTableOffset -1
-        });
-
-        return volumeTableLoader.start();
-
-      }).then(function(data) {
-        var def = Q.defer();
-        data = (new Uint8Array(data)).asString();
-        _this.volumeTable = JSON.parse(data);
-        _this.volumeTableLoaded = true;
-        def.resolve(_this.fileTable);
-        return def.promise;        
-      });
-    };
-
-    Loader.prototype._p_jms1_getFile = function(path, type) {
-      var def = Q.defer();
-      var file = this.findFileEntry(path);
-      type = type || 'application/octet-binary';
-
-      if (file.volume in this.volumeTable) {
-        var volumePath = this.volumeTable[file.volume].filename;
-        var fileLoader = new JPAK.Tools.DataLoader({
-          url: volumePath,
-          partial: true,
-          partialFrom: file.offset,
-          partialTo: file.offset + file.size -1
-        });
-
-        fileLoader.start().then(function(data) {
-          if(file.compressed !== undefined && file.compressed)
-            data = JPAK.Tools.GZ.decompress(data);
-          def.resolve(data);
-        }).fail(function(error) {
-          def.reject(error);
-        });
-      } else {
-        def.reject("Volume \""+file.volume+"\" not found!");
-      }
-
-      return def.promise;
-    };
-
-    Loader.prototype._p_jms1_getFileBlob = function(path, type) {
-      var def = Q.defer();
-
-      this._p_jms1_getFile(path, type).then(function (data) {
-        def.resolve(new Blob([new Uint8Array(data).buffer], {"type":type}));
-      }).fail(function(error) {
-        def.reject(error);
-      });
-
-      return def.promise;
-    };
-
-    JPAK.Loader = Loader;
-  }
-
+  JPAK.Classes.JPKVolumeEntry = JPKVolumeEntry;
 
 })();
 /**
