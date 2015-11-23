@@ -16,7 +16,7 @@ For what this can be used?
 
 What is done
 ========
-* Javascript Loader / Packer for 2.0
+* Javascript Loader / Packer for 2.0 EXT (Both NodeJS and Browser)
 * Python Packer for 1.0
 * JPAK 1.0 Specification file
 * JPAK 2.0 Extended Specification file

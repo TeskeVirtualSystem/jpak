@@ -1,6 +1,6 @@
 {
   "name": "JPAK",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "repository" : {
     "type" : "git",
     "url" : "https://github.com/TeskeVirtualSystem/jpak"
@@ -24,7 +24,8 @@
     "grunt-contrib-concat": "~0.4.0",
     "grunt-contrib-jshint": "~0.10.0",
     "grunt-contrib-watch": "~0.6.1",
-    "grunt-bower-task": "~0.3.4"
+    "grunt-bower-task": "~0.3.4",
+    "q": "1.0.1"
   },
   "license": "MIT"
 }
