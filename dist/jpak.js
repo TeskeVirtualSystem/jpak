@@ -3035,7 +3035,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     });
 
     return tableOffsetLoader.start().then(function(data) {
-      _this.fileTableOffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
+      _this.fileTableOffset = new DataView(data).getUint32(0, true);
       var fileTableLoader = new JPAK.Tools.DataLoader({
         url: _this.jpakfile,
         partial: true,
@@ -3073,7 +3073,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       url: this.jpakfile,
       partial: true,
       partialFrom: file.offset + offset,
-      partialTo: file.offset + len -1
+      partialTo: file.offset + offset + len -1
     });
 
     fileLoader.start().then(function(data) {
@@ -3162,7 +3162,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         url: volumePath,
         partial: true,
         partialFrom: file.offset + offset,
-        partialTo: file.offset + len -1
+        partialTo: file.offset + offset + len -1
       });
 
       fileLoader.start().then(function(data) {

@@ -293,7 +293,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       url: this.jpakfile,
       partial: true,
       partialFrom: file.offset + offset,
-      partialTo: file.offset + len -1
+      partialTo: file.offset + offset + len -1
     });
 
     fileLoader.start().then(function(data) {
@@ -382,7 +382,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         url: volumePath,
         partial: true,
         partialFrom: file.offset + offset,
-        partialTo: file.offset + len -1
+        partialTo: file.offset + offset + len -1
       });
 
       fileLoader.start().then(function(data) {
