@@ -255,7 +255,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     });
 
     return tableOffsetLoader.start().then(function(data) {
-      _this.fileTableOffset = new DataView(data.slice(data.byteLength-4,data.byteLength)).getUint32(0, true);
+      _this.fileTableOffset = new DataView(data).getUint32(0, true);
       var fileTableLoader = new JPAK.Tools.DataLoader({
         url: _this.jpakfile,
         partial: true,
