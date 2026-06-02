@@ -46,6 +46,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         this.partialFrom = parameters.partialFrom || 0;
         this.partialTo = parameters.partialTo || 0;
         this.fetchSize = parameters.fetchSize || false;
+        this.contentRange = null;
 
         this.callbacks = {
           "load" : [],
@@ -61,6 +62,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         };
 
         this.xhr.onload = (e) => {
+          this.contentRange = this.xhr.getResponseHeader("Content-Range");
           if (this.xhr.status >= 200 && this.xhr.status < 300) {
             if (this.fetchSize)
               this._reportLoad(parseInt(this.xhr.getResponseHeader("Content-Length")));

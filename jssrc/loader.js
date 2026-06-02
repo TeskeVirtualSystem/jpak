@@ -196,15 +196,37 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     /** Promises **/
 
     _p_getFileSize() {
+      if (inNode) {
+        return new JPAK.Tools.DataLoader({
+          url: this.jpakfile,
+          fetchSize: true
+        }).start().then((size) => {
+          this.fileSize = size;
+          JPAK.Tools.d("File Size: "+size);
+          return size;
+        });
+      }
+
       const SizeLoader = new JPAK.Tools.DataLoader({
         url: this.jpakfile,
-        fetchSize: true
+        partial: true,
+        partialFrom: 0,
+        partialTo: 0
       });
 
-      return SizeLoader.start().then((size) => {
-        this.fileSize = size;
-        JPAK.Tools.d("File Size: "+size);
-        return size;
+      return SizeLoader.start().then(() => {
+        const cr = SizeLoader.contentRange;
+        if (cr) {
+          const m = cr.match(/\/(\d+)$/);
+          if (m) {
+            this.fileSize = parseInt(m[1], 10);
+          }
+        }
+        if (!this.fileSize) {
+          this.fileSize = parseInt(SizeLoader.xhr.getResponseHeader("Content-Length")) || 0;
+        }
+        JPAK.Tools.d("File Size: "+this.fileSize);
+        return this.fileSize;
       });
     }
 
