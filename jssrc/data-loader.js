@@ -215,7 +215,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         loadReject(err);
                       } else if (bytesRead <= 0) {
                         close();
-                        loadResolve(buf);
+                        loadReject(new Error("Truncated read: expected " + readsize + " bytes, got " + offset + " at position " + (position + offset)));
                       } else {
                         readChunk(buf, offset + bytesRead, remaining - bytesRead);
                       }

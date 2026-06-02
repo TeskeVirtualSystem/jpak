@@ -267,7 +267,7 @@ const JPAK = {
   };
 
   JPAK.Constants.REVERSE_MAGIC_TYPE = {
-    0: "JPAK1",
+    0: "JPAK1/JPAK2",
     1: "JMS1",
     2: "JDS1"
   };

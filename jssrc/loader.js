@@ -213,7 +213,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         url: this.jpakfile,
         partial: true,
         partialFrom: this.fileSize-4,
-        partialTo: this.fileSize
+        partialTo: this.fileSize - 1
       });
 
       return tableOffsetLoader.start().then((data) => {
@@ -271,7 +271,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         url: this.jpakfile,
         partial: true,
         partialFrom: this.fileSize-4,
-        partialTo: this.fileSize
+        partialTo: this.fileSize - 1
       });
 
       return tableOffsetLoader.start().then((data) => {

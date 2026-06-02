@@ -16,6 +16,21 @@ const banner = `/**
  * @see https://github.com/TeskeVirtualSystem/jpak
  */\n`;
 
+const esmPreamble = `// ESM require shim: works in Node CJS (global require), Node ESM (createRequire), and browser (noop)
+let _jpRequire = typeof require !== 'undefined' ? require : undefined;
+if (!_jpRequire && typeof process !== 'undefined' && process.versions && process.versions.node) {
+  try {
+    const { createRequire } = (await import('node:module'));
+    _jpRequire = createRequire(import.meta.url);
+  } catch (e) {}
+}
+/*@__NO_SIDE_EFFECTS__*/
+function $require(name) {
+  if (_jpRequire) return _jpRequire(name);
+  throw new Error('require("' + name + '") requires Node.js');
+}
+`;
+
 async function build() {
   const files = fs.readdirSync(srcDir)
     .filter(f => f.endsWith('.js'))
@@ -30,7 +45,7 @@ async function build() {
   const umdPath = path.join(distDir, 'jpak.js');
   fs.writeFileSync(umdPath, umdContent);
 
-  // ESM build — same content but with ESM export replacing zzzz.js logic
+  // ESM build — require shim + ESM export replacing zzzz.js logic
   const esmFiles = rawFiles.map(content => {
     if (content.includes("module.exports.JPAK = JPAK")) {
       return content
@@ -41,7 +56,9 @@ async function build() {
     }
     return content;
   });
-  const esmContent = banner + esmFiles.join('\n') + '\n';
+  let esmContent = esmFiles.join('\n');
+  esmContent = esmContent.replace(/\brequire\s*\(/g, '$require(');
+  esmContent = banner + esmPreamble + esmContent + '\n';
   const esmPath = path.join(distDir, 'jpak.mjs');
   fs.writeFileSync(esmPath, esmContent);
 

@@ -286,37 +286,49 @@ def mkdir(path):
         pass
 
 
+def _safe_path(root, name):
+    filepath = os.path.join(root, name)
+    real = os.path.realpath(filepath)
+    root_real = os.path.realpath(root)
+    if os.path.commonpath([real, root_real]) != root_real:
+        return None
+    return filepath
+
+
 def ProcessFolder(entry, volume, root, version=2, compress=False):
-    '''
-        Process a Folder entry
-    '''
     if version == 1:
         root = root + entry["name"] + "/"
-        ProcessFiles(entry["files"], volume, root, version)
         for directory in entry["directories"]:
-            mkdir(os.path.join(root, entry["directories"][directory]["name"]))
+            dname = entry["directories"][directory]["name"]
+            dp = _safe_path(root, dname)
+            if dp is None:
+                print("Skipping unsafe dir: %s" % dname)
+                continue
+            mkdir(dp)
             ProcessFolder(entry["directories"][directory], volume, root, version, compress)
+        ProcessFiles(entry["files"], volume, root, version)
     elif version == 2:
         root = root + entry["name"] + "/"
         if entry["key"] is True:
             print("Cannot decrypt folder %s" % root)
             return
-        else:
-            ProcessFiles(entry["files"], volume, root, version, entry["key"], compress)
-            for directory in entry["directories"]:
-                mkdir(os.path.join(root, entry["directories"][directory]["name"]))
-                ProcessFolder(entry["directories"][directory], volume, root, version, compress)
+        for directory in entry["directories"]:
+            dname = entry["directories"][directory]["name"]
+            dp = _safe_path(root, dname)
+            if dp is None:
+                print("Skipping unsafe dir: %s" % dname)
+                continue
+            mkdir(dp)
+            ProcessFolder(entry["directories"][directory], volume, root, version, compress)
+        ProcessFiles(entry["files"], volume, root, version, entry["key"], compress)
 
 
 def ProcessFiles(entry, volume, root, version=2, rootkey=None, compress=False):
-    '''
-        Process Files Entries
-    '''
     if version == 1:
         for file in entry:
-            filepath = os.path.join(root, entry[file]["name"])
-            if os.path.realpath(filepath) != filepath:
-                print("Skipping unsafe path: %s" % filepath)
+            filepath = _safe_path(root, entry[file]["name"])
+            if filepath is None:
+                print("Skipping unsafe path: %s" % entry[file]["name"])
                 continue
             print("Extracting file %s" % filepath)
             f = open(filepath, "wb")
@@ -326,10 +338,10 @@ def ProcessFiles(entry, volume, root, version=2, rootkey=None, compress=False):
             f.close()
     elif version == 2:
         for file in entry:
-            filepath = os.path.join(root, entry[file]["name"])
-            if os.path.realpath(filepath) != filepath:
-                print("Skipping unsafe path: %s" % filepath)
-                return
+            filepath = _safe_path(root, entry[file]["name"])
+            if filepath is None:
+                print("Skipping unsafe path: %s" % entry[file]["name"])
+                continue
             if entry[file]["key"] is True:
                 print("Cannot decrypt file %s" % filepath)
                 return
