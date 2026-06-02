@@ -33,7 +33,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
+  const inNode = (typeof process !== 'undefined' && process.versions && process.versions.node);
 
   if (!inNode) {
     class DataLoader {
@@ -54,7 +54,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         };
 
         this.xhr.onprogress = (e) => {
-          if (e.lengthComputable && this.onprogress !== undefined) {
+          if (e.lengthComputable) {
             const percentComplete = (( (e.loaded / e.total)*10000 ) >> 0)/100;
             this._reportProgress({"loaded":e.loaded,"total":e.total,"percent": percentComplete});
           }
@@ -180,15 +180,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 return;
               }
 
+              const close = () => { try { fs.close(fd, () => {}); } catch (e) {} };
+
               const getSize = () => {
                 return new Promise((sizeResolve, sizeReject) => {
                   if (_this.partial) {
                     sizeResolve(_this.partialTo - _this.partialFrom + 1);
                   } else {
                     fs.fstat(fd, (err, stats) => {
-                      if (err)
+                      if (err) {
+                        close();
                         sizeReject(err);
-                      else
+                      } else
                         sizeResolve(stats.size);
                     });
                   }
@@ -199,12 +202,27 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                 return new Promise((loadResolve, loadReject) => {
                   const buffer = Buffer.alloc(readsize);
                   const position = _this.partial ? _this.partialFrom : 0;
-                  fs.read(fd, buffer, 0, readsize, position, (err) => {
-                    if (err)
-                      loadReject(err);
-                    else
-                      loadResolve(buffer);
-                  });
+
+                  const readChunk = (buf, offset, remaining) => {
+                    if (remaining <= 0) {
+                      close();
+                      loadResolve(buf);
+                      return;
+                    }
+                    fs.read(fd, buf, offset, remaining, position + offset, (err, bytesRead) => {
+                      if (err) {
+                        close();
+                        loadReject(err);
+                      } else if (bytesRead <= 0) {
+                        close();
+                        loadResolve(buf);
+                      } else {
+                        readChunk(buf, offset + bytesRead, remaining - bytesRead);
+                      }
+                    });
+                  };
+
+                  readChunk(buffer, 0, readsize);
                 });
               }).then((data) => {
                 _this._reportLoad(JPAK.Tools.toArrayBuffer(data));

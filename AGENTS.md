@@ -48,7 +48,7 @@ python3 tools/unpacker.py file.jpak       # extract any JPAK file
 ## CI / Publishing
 
 - `ci.yml` — runs lint + test on push/PR to master (Node 18/20/22 matrix)
-- `publish.yml` — triggered by `v*` tags or manual dispatch; runs full validation then `npm publish`
+- `publish.yml` — triggered by `v*` tags or manual dispatch; runs full validation then `npm publish` via OIDC trusted publisher
 
 Requires `NPM_TOKEN` secret set in GitHub repo settings (from npmjs.com Access Tokens, with publish permission scoped to `@teskevirtualsystem/jpak`).
 
@@ -69,10 +69,11 @@ git push --follow-tags          # triggers publish workflow
 ## Testing
 
 ```sh
-node test/test_node.js             # loads test/packtest.jms via Node loader
+node --test test/test.js          # run 47 automated tests via node:test (zero dependencies)
 ```
 
-No test framework. Manual browser tests at `test/test_jpak.html` and `test_jms.html`.
+Six test suites: namespace, utilities, classes, JMS loader, JPAK 1.0 loader, error handling.
+Manual browser tests at `test/test_jpak.html` and `test_jms.html`.
 
 ## Conventions
 

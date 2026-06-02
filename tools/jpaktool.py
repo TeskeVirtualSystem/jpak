@@ -315,6 +315,9 @@ def ProcessFiles(entry, volume, root, version=2, rootkey=None, compress=False):
     if version == 1:
         for file in entry:
             filepath = os.path.join(root, entry[file]["name"])
+            if os.path.realpath(filepath) != filepath:
+                print("Skipping unsafe path: %s" % filepath)
+                continue
             print("Extracting file %s" % filepath)
             f = open(filepath, "wb")
             volume.seek(entry[file]["offset"])
@@ -324,6 +327,9 @@ def ProcessFiles(entry, volume, root, version=2, rootkey=None, compress=False):
     elif version == 2:
         for file in entry:
             filepath = os.path.join(root, entry[file]["name"])
+            if os.path.realpath(filepath) != filepath:
+                print("Skipping unsafe path: %s" % filepath)
+                return
             if entry[file]["key"] is True:
                 print("Cannot decrypt file %s" % filepath)
                 return

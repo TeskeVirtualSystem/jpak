@@ -43,7 +43,7 @@ const JPAK = {
 
 (function() {
 
-  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
+  const inNode = (typeof process !== 'undefined' && process.versions && process.versions.node);
 
   if (inNode) {
     const { Buffer } = require('buffer');
@@ -71,6 +71,7 @@ const JPAK = {
    * Convert a Uint8Array to a string (replaces old Uint8Array.prototype.asString)
    */
   JPAK.Tools.bytesToString = function(bytes) {
+    if (typeof TextDecoder !== 'undefined') return new TextDecoder().decode(bytes);
     let o = "";
     for (let i = 0; i < bytes.byteLength; i++)
       o += String.fromCharCode(bytes[i]);
@@ -260,6 +261,7 @@ const JPAK = {
 
   JPAK.Constants.MAGIC_TYPE = {
     "JPAK1": 0,
+    "JPAK2": 0,
     "JMS1": 1,
     "JDS1": 2
   };

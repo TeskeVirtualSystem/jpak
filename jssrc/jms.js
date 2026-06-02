@@ -33,7 +33,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
+  const inNode = (typeof process !== 'undefined' && process.versions && process.versions.node);
 
   class JMS {
     constructor(volumeTable, fileTable, producerId, flags, userflags) {

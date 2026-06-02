@@ -33,7 +33,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
+  const inNode = (typeof process !== 'undefined' && process.versions && process.versions.node);
+
+  let fs, p;
+  if (inNode) {
+    fs = require('fs');
+    p = require('path');
+  }
 
   class Loader {
     constructor(parameters) {
@@ -176,6 +182,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     }
 
     getFileURL(path, mimeType) {
+      if (inNode) return Promise.reject(new Error("getFileURL is only available in browser"));
       return this.getFile(path, mimeType).then((blob) => {
         if (blob !== undefined)
           return URL.createObjectURL(blob);
@@ -307,7 +314,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       len = len || file.size;
 
       if (file.volume in this.volumeTable) {
-        const volumePath = this.volumeTable[file.volume].filename;
+        let volumePath = this.volumeTable[file.volume].filename;
+        if (inNode) {
+          volumePath = p.resolve(p.dirname(this.jpakfile), volumePath);
+        }
         const fileLoader = new JPAK.Tools.DataLoader({
           url: volumePath,
           partial: true,
