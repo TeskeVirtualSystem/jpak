@@ -44,5 +44,8 @@
     "pretest": "npm run build",
     "prepublishOnly": "npm run lint && npm run build && npm test"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT"
 }

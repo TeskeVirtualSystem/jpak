@@ -45,6 +45,18 @@ python3 tools/packer.py 0 0 0 "" folder/  # create JPAK 2.0 package
 python3 tools/unpacker.py file.jpak       # extract any JPAK file
 ```
 
+## CI / Publishing
+
+- `ci.yml` — runs lint + test on push/PR to master (Node 18/20/22 matrix)
+- `publish.yml` — triggered by `v*` tags or manual dispatch; runs full validation then `npm publish --provenance`
+- Requires `NPM_TOKEN` secret set in GitHub repo settings (Automation token from npmjs.com)
+
+To publish a release:
+```sh
+npm version patch|minor|major   # bumps version + creates git tag
+git push --follow-tags          # triggers publish workflow
+```
+
 ## Architecture notes
 
 - `JPAK` global namespace split into `JPAK.Constants`, `JPAK.Generics`, `JPAK.Loader`, `JPAK.Classes`, `JPAK.Tools`
