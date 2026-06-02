@@ -32,7 +32,7 @@ npm test                          # build + run test_node.js
 `tools/build.js` — concats all `jssrc/*.js` in alphabetical order, produces three outputs:
 - `dist/jpak.js` — UMD bundle (works with `<script>` tag and `require()`)
 - `dist/jpak.min.js` — minified UMD (terser, no mangling)
-- `dist/jpak.mjs` — ES module (works with `import JPAK from 'jpak'` or `import { JPAK } from 'jpak'`)
+- `dist/jpak.mjs` — ES module (works with `import JPAK from '@teskevirtualsystem/jpak'` or `import { JPAK } from '@teskevirtualsystem/jpak'`)
 
 No external dependencies at runtime (Q library replaced by native Promises).
 
