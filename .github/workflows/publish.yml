@@ -19,8 +19,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false
+
+      - run: |
+          echo "npm: $(npm -v)"
+          echo "node: $(node -v)"
+          echo "OIDC URL: ${ACTIONS_ID_TOKEN_REQUEST_URL:+SET}"
+          echo "OIDC TOKEN: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+SET}"
 
       - run: npm ci
 
@@ -28,4 +32,4 @@ jobs:
 
       - run: npm test
 
-      - run: npm publish
+      - run: npm publish --registry=https://registry.npmjs.org
