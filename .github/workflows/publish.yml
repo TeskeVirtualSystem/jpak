@@ -20,10 +20,22 @@ jobs:
         with:
           node-version: '24'
 
+      - run: |
+          echo "=== .npmrc contents ==="
+          cat ~/.npmrc 2>/dev/null || echo "(no .npmrc)"
+          echo "=== project .npmrc ==="
+          cat .npmrc 2>/dev/null || echo "(no project .npmrc)"
+          echo "=== env ==="
+          env | grep -i npm
+          env | grep -i node
+          echo "=== OIDC ==="
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL: ${ACTIONS_ID_TOKEN_REQUEST_URL:+PRESENT}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+PRESENT}"
+
       - run: npm ci
 
       - run: npm run lint
 
       - run: npm test
 
-      - run: npm publish
+      - run: npm publish --provenance
