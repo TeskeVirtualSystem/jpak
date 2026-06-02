@@ -1,31 +1,48 @@
 {
-  "name": "JPAK",
-  "version": "2.0.1",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/TeskeVirtualSystem/jpak"
+  "name": "jpak",
+  "version": "3.0.0",
+  "description": "Multi-use JavaScript Package System for loading several files at once",
+  "engines": {
+    "node": ">=18"
   },
-  "dependencies" : {
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TeskeVirtualSystem/jpak"
   },
-  "keywords" : [
+  "main": "dist/jpak.js",
+  "module": "dist/jpak.mjs",
+  "browser": "dist/jpak.min.js",
+  "exports": {
+    ".": {
+      "import": "./dist/jpak.mjs",
+      "require": "./dist/jpak.js",
+      "browser": "./dist/jpak.min.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "tools/"
+  ],
+  "keywords": [
     "file system",
     "distributed",
-    "package"
+    "package",
+    "asset",
+    "bundle",
+    "jpak",
+    "jms",
+    "jds"
   ],
   "devDependencies": {
-    "grunt": "~0.4.5",
-    "grunt-cli": "~0.1.13",
-    "grunt-html2js": "~0.2.7",
-    "grunt-contrib-uglify": "~0.5.0",
-    "grunt-contrib-less": "~0.11.2",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-connect": "~0.8.0",
-    "grunt-contrib-compress": "~0.9.1",
-    "grunt-contrib-concat": "~0.4.0",
-    "grunt-contrib-jshint": "~0.10.0",
-    "grunt-contrib-watch": "~0.6.1",
-    "grunt-bower-task": "~0.3.4",
-    "q": "1.0.1"
+    "jshint": "^2.13.6",
+    "terser": "^5.31.0"
+  },
+  "scripts": {
+    "build": "node tools/build.js",
+    "lint": "jshint jssrc/*.js",
+    "test": "node --test test/test.js",
+    "pretest": "npm run build",
+    "prepublishOnly": "npm run lint && npm run build && npm test"
   },
   "license": "MIT"
 }

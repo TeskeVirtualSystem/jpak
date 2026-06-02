@@ -33,16 +33,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  var JPKFileEntry = function(name, path, offset, size, aeskey, zlib, volume, md5) {
-    this.name = name || "";
-    this.path = path || "";
-    this.offset = offset || 0;
-    this.size = size || 0;
-    this.aeskey = aeskey || "";
-    this.zlib = zlib || false;
-    this.volume = volume || "";
-    this.md5 = md5 || "";
-  };
+  class JPKFileEntry {
+    constructor(name, path, offset, size, aeskey, zlib, volume, md5) {
+      this.name = name || "";
+      this.path = path || "";
+      this.offset = offset || 0;
+      this.size = size || 0;
+      this.aeskey = aeskey || "";
+      this.zlib = zlib || false;
+      this.volume = volume || "";
+      this.md5 = md5 || "";
+    }
+  }
 
   JPKFileEntry.prototype.toObject = JPAK.Generics.genericToObject;
   JPKFileEntry.prototype.fromObject = JPAK.Generics.genericFromObject;

@@ -33,15 +33,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  var inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined'); 
+  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
 
-  var JMS = function(volumeTable, fileTable, producerId, flags, userflags) {
-    this.volumeTable = volumeTable || {};
-    this.fileTable = fileTable || new JPAK.Classes.JPKDirectoryEntry("root");
-    this.producerId = producerId || 0;
-    this.userflags = userflags || 0;
-    this.MAGIC = "JMS1";
-  };
+  class JMS {
+    constructor(volumeTable, fileTable, producerId, flags, userflags) {
+      this.volumeTable = volumeTable || {};
+      this.fileTable = fileTable || new JPAK.Classes.JPKDirectoryEntry("root");
+      this.producerId = producerId || 0;
+      this.flags = flags || 0;
+      this.userflags = userflags || 0;
+      this.MAGIC = "JMS1";
+    }
+  }
 
   JMS.prototype.toObject = JPAK.Generics.genericToObject;
   JMS.prototype.fromObject = JPAK.Generics.genericFromObject;
@@ -49,77 +52,76 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   JMS.prototype.jFromJSON = JPAK.Generics.genericjFromJSON;
 
   JMS.prototype.fromBinary = function(data) {
-    if (inNode) 
+    if (inNode)
       data = JPAK.Tools.toArrayBuffer(data);
-    
-    var MagicNumber = (new Uint8Array(data.slice(0,4))).asString();
+
+    const MagicNumber = JPAK.Tools.bytesToString(new Uint8Array(data.slice(0,4)));
 
     if (MagicNumber !== this.MAGIC) {
       console.error("MagicNumber doesn't match! Expected: "+this.MAGIC+" got "+MagicNumber);
       return;
     }
 
-    var dV = new DataView(data);
-    var fileTableOffset = dV.getUint32(data.byteLength-4);
-    var volumeTableSize = fileTableOffset - 0xC;
-    var fileTableSize = data.byteLength - fileTableOffset - 12;
-    var fileTable = (new Uint8Array(data.slice(fileTableOffset,data.byteLength-16))).asString();
-    var volumes = (new Uint8Array(data.slice(0xC,volumeTableSize+0xC))).asString();
-    var volumeTable = JSON.parse((new Uint8Array(data.slice(0xC,volumeTableSize+0xC))).asString());
+    const dV = new DataView(data);
+    const fileTableOffset = dV.getUint32(data.byteLength-4, true);
+    const volumeTableSize = fileTableOffset - 0xC;
+    const fileTable = JPAK.Tools.bytesToString(new Uint8Array(data.slice(fileTableOffset,data.byteLength-16)));
+    const volumeTableRaw = JPAK.Tools.bytesToString(new Uint8Array(data.slice(0xC,volumeTableSize+0xC)));
+    const volumeTable = JSON.parse(volumeTableRaw);
 
     this.fileTable = new JPAK.Classes.JPKDirectoryEntry();
     this.fileTable.jFromJSON(fileTable);
     this.volumeTable = {};
 
-    for (var v in volumeTable) {
-      var newVolume = new JPAK.Classes.JPKVolumeEntry();
+    for (const v in volumeTable) {
+      const newVolume = new JPAK.Classes.JPKVolumeEntry();
       newVolume.fromObject(volumeTable[v]);
       this.volumeTable[v] = newVolume;
     }
   };
 
   JMS.prototype.toBinary = function() {
-    var fileTable = this.fileTable.jToJSON();
+    const fileTable = this.fileTable.jToJSON();
 
-    var volumeTable = {};
-    for (var v in this.volumeTable) {
-      volumeTable[v] = this.volumeTable[v].toObject();
+    const volumeTableObj = {};
+    for (const v in this.volumeTable) {
+      volumeTableObj[v] = this.volumeTable[v].toObject();
     }
-    volumeTable = JSON.stringify(volumeTable);
+    const volumeTable = JSON.stringify(volumeTableObj);
 
-    var buffer = new ArrayBuffer(12 + volumeTable.length + fileTable.length + 16);
-    var u8 = new Uint8Array(buffer);
-    var dv = new DataView(buffer);
+    const buffer = new ArrayBuffer(12 + volumeTable.length + fileTable.length + 16);
+    const u8 = new Uint8Array(buffer);
+    const dv = new DataView(buffer);
 
     dv.setUint32(buffer.byteLength-16, this.producerId, true);
     dv.setUint32(buffer.byteLength-12, this.flags, true);
     dv.setUint32(buffer.byteLength-8, this.userflags, true);
 
-    u8.putString(this.MAGIC);
-    var fileTableOffset = u8.putString(0xC, volumeTable);
-    u8.putString(fileTableOffset, fileTable);
+    JPAK.Tools.stringToBytes(u8, this.MAGIC);
+    const fileTableOffset = JPAK.Tools.stringToBytes(u8, 0xC, volumeTable);
+    JPAK.Tools.stringToBytes(u8, fileTableOffset, fileTable);
     dv.setUint32(buffer.byteLength-4, fileTableOffset, true);
 
     return buffer;
   };
 
   if (inNode) {
-    var fs = require("fs");
-    var path = require("path");
+    const fs = require("fs");
+    const path = require("path");
 
-   JMS.prototype.fromDirectory = function(folder, jds) {
+    JMS.prototype.fromDirectory = function(folder, jds) {
       this.fileTable.fromDirectory(folder, jds);
     };
 
     JMS.prototype.fromArgs = function(args, jds) {
-      for(var i in args) {
-        var folder = args[i];
+      for (const i in args) {
+        const folder = args[i];
         console.log("Adding from arg "+folder);
-        if(fs.lstatSync(folder).isDirectory()) {
-            if (!this.fileTable.directories.hasOwnProperty(path.basename(folder)))
-              this.fileTable.directories[path.basename(folder)] = new JPAK.Classes.JPKDirectoryEntry(path.basename(folder));
+        if (fs.lstatSync(folder).isDirectory()) {
+          if (!this.fileTable.directories.hasOwnProperty(path.basename(folder)))
+            this.fileTable.directories[path.basename(folder)] = new JPAK.Classes.JPKDirectoryEntry(path.basename(folder));
 
-            this.fileTable.directories[path.basename(folder)].fromDirectory(folder, jds);
+          this.fileTable.directories[path.basename(folder)].fromDirectory(folder, jds);
         } else
           this.fileTable.addFile(folder, jds, true);
       }
@@ -135,8 +137,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     };
 
     JMS.prototype.toFile = function (filename) {
-      var fd = fs.openSync(filename, "w");
-      var binData = this.toBinary();
+      const fd = fs.openSync(filename, "w");
+      const binData = this.toBinary();
       fs.writeSync(fd, JPAK.Tools.toBuffer(binData), 0, binData.byteLength);
       fs.closeSync(fd);
     };
@@ -144,4 +146,4 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
   JPAK.Classes.JMS = JMS;
 
-}());
+})();

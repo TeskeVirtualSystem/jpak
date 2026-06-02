@@ -27,9 +27,9 @@
 
 (function() {
 
-  var GZ = {};
+  const GZ = {};
 
-  var bitReverse = [
+  const bitReverse = [
                     0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
                     0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
                     0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
@@ -64,35 +64,35 @@
                     0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
                   ];
           
-  var cplens =  [
+  const cplens =  [
                   3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
                   35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0
                 ];
 
-  var cplext =  [
+  const cplext =  [
                   0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
                   3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 99, 99
                 ]; /* 99==invalid */
 
-  var cpdist =  [
+  const cpdist =  [
                   0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0007, 0x0009, 0x000d,
                   0x0011, 0x0019, 0x0021, 0x0031, 0x0041, 0x0061, 0x0081, 0x00c1,
                   0x0101, 0x0181, 0x0201, 0x0301, 0x0401, 0x0601, 0x0801, 0x0c01,
                   0x1001, 0x1801, 0x2001, 0x3001, 0x4001, 0x6001
                 ];
 
-  var cpdext =  [
+  const cpdext =  [
                   0,  0,  0,  0,  1,  1,  2,  2,
                   3,  3,  4,  4,  5,  5,  6,  6,
                   7,  7,  8,  8,  9,  9, 10, 10,
                   11, 11, 12, 12, 13, 13
                 ];
 
-  var border = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
-  var NAMEMAX = 256;
+  const border = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+  const NAMEMAX = 256;
 
   GZ.decompress = function ( data ) {
-    var arr = new Uint8Array(data),
+    const arr = new Uint8Array(data),
     gzip = new GZ.Unzip(arr).unzip();
     if(gzip.length > 0 && gzip[0].length > 0)
       data = gzip[0][0];
@@ -100,7 +100,7 @@
       data = "";
       JPAK.Tools.e("Error uncompressing data!");
     }
-    return JPAK.Tools.String2ArrayBuffer(data);
+    return JPAK.Tools.stringToArrayBuffer(data);
   };
 
   /**
@@ -114,7 +114,8 @@
   * @see http://www.cs.tut.fi/~albert
   */
   GZ.Unzip = function (barray) {
-    var gpflags, crc, SIZE, fileout, flens, fmax, skipdir,
+    let gpflags, crc, SIZE, fileout, flens, fmax;
+    let skipdir,
         outputArr = [],
         output = '',
         debug = false,
@@ -153,7 +154,7 @@
     }
 
     function readBit() {
-      var carry;
+      let carry;
 
       bits++;
       carry = (bb & 1);
@@ -168,7 +169,7 @@
     }
 
     function readBits(a) {
-      var res = 0,
+      let res = 0,
           i = a;
 
       while (i--)
@@ -213,7 +214,7 @@
     }
 
     function rec() {
-      var curplace = Places[treepos],
+      let curplace = Places[treepos],
           tmp;
 
       if (len === 17)
@@ -256,7 +257,7 @@
     }
 
     function createTree(currentTree, numval, lengths, show) {
-      var i;
+      let i;
 
       Places = currentTree;
       treepos = 0;
@@ -275,7 +276,7 @@
     }
 
     function decodeValue(currentTree) {
-      var len, i, b,
+      let len, i, b,
           xtreepos = 0,
           X = currentTree[xtreepos];
 
@@ -310,7 +311,7 @@
     }
 
     function deflateLoop() {
-      var last, c, type, i, j, l, ll, ll2, len, blockLen, dist, cSum,
+      let last, c, type, i, j, l, ll, ll2, len, blockLen, dist, cSum,
           n, literalCodes, distCodes, lenCodes, z;
 
       do {
@@ -521,7 +522,7 @@
     }
 
     function nextFile() {
-      var i, c, extralen, filelen, size, compSize, crc, method,
+      let i, c, extralen, filelen, size, compSize, crc, method,
           tmp = [];
 
       outputArr = [];
@@ -593,7 +594,7 @@
             c = readByte();
             if (c === '/' | c === ':') {
               i = 0;
-            } else if (i < JPAK.GZIP.NAMEMAX - 1) {
+            } else if (i < NAMEMAX - 1) {
               nameBuf[i++] = String.fromCharCode(c);
             }
           }
@@ -624,7 +625,7 @@
     }
 
     skipdir = function () {
-      var crc, compSize, size, os, i, c,
+      let crc, compSize, size, os, i, c,
           tmp = [];
 
       if ((gpflags & 8)) {
@@ -729,7 +730,7 @@
 
   GZ.Unzip.prototype.unzipFile = function (name) {
     this.unzip();
-    for (var i = 0; i < unzipped.length; i++) {
+    for (let i = 0; i < unzipped.length; i++) {
       if (unzipped[i][1] === name) {
         return unzipped[i][0];
       }

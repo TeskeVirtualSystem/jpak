@@ -31,9 +31,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **/
 
-/**
-  I know, this a very XGH approach. But works fined and I like it. I dare you put a file after this one!
-**/
 if ((typeof module !== 'undefined' && typeof module.exports !== 'undefined'))
   module.exports.JPAK = JPAK;
 else

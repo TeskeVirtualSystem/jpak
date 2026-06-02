@@ -33,60 +33,62 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  var inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
+  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
   if (inNode) {
 
-    var fs = require("fs");
-    var path = require("path");
+    const fs = require("fs");
+    const path = require("path");
 
-    var JDS = function(name, filename) {
-      this.MAGIC = "JDS1";
-      this.name = name || "";
-      this.filename = filename || "";
-      if (fs.existsSync(filename) && fs.statSync(filename).isFile())
-        this.fd = fs.openSync(filename, "r+");
-      else 
-        this.fd = fs.openSync(filename, "w+");
+    class JDS {
+      constructor(name, filename) {
+        this.MAGIC = "JDS1";
+        this.name = name || "";
+        this.filename = filename || "";
+        if (fs.existsSync(filename) && fs.statSync(filename).isFile())
+          this.fd = fs.openSync(filename, "r+");
+        else
+          this.fd = fs.openSync(filename, "w+");
 
-      if (fs.statSync(filename).size< 12)
-        this.__buildHeader();
-      this.currentPosition = 12; 
-      this.CHUNK = 4096;
-    };
-
-    JDS.prototype.__buildHeader = function() {
-      console.log("Creating Header in "+this.filename);
-      fs.writeSync(this.fd, this.MAGIC);
-      fs.writeSync(this.fd, "\x00\x00\x00\x00\x00\x00\x00\x00");
-    };
-
-    JDS.prototype.add = function(data) {
-      var offset = this.currentPosition;
-      var o = fs.writeSync(this.fd, data);
-      this.currentPosition += o;
-      return [offset, data.length];
-    };
-
-    JDS.prototype.addFromFile = function(filename) {
-      var newFd = fs.openSync(filename, "r");
-      var offset = this.currentPosition;
-      var size = fs.statSync(filename).size;
-      var c = 0;
-      var data = new Buffer(this.CHUNK);
-      while ( c < size ) {
-        var chunk = size - c > this.CHUNK ? this.CHUNK : size - c;
-        fs.readSync(newFd, data, 0, chunk);
-        fs.writeSync(this.fd, data, 0, chunk, this.currentPosition);
-        c += chunk;
-        this.currentPosition += chunk;
+        if (fs.statSync(filename).size < 12)
+          this.__buildHeader();
+        this.currentPosition = 12;
+        this.CHUNK = 4096;
       }
-      fs.closeSync(newFd);
-      return [offset, size];
-    };
 
-    JDS.prototype.close = function() {
-      fs.closeSync(this.fd);
-    };
+      __buildHeader() {
+        console.log("Creating Header in "+this.filename);
+        fs.writeSync(this.fd, this.MAGIC);
+        fs.writeSync(this.fd, "\x00\x00\x00\x00\x00\x00\x00\x00");
+      }
+
+      add(data) {
+        const offset = this.currentPosition;
+        const o = fs.writeSync(this.fd, data);
+        this.currentPosition += o;
+        return [offset, data.length];
+      }
+
+      addFromFile(filename) {
+        const newFd = fs.openSync(filename, "r");
+        const offset = this.currentPosition;
+        const size = fs.statSync(filename).size;
+        let c = 0;
+        const data = Buffer.alloc(this.CHUNK);
+        while (c < size) {
+          const chunk = size - c > this.CHUNK ? this.CHUNK : size - c;
+          fs.readSync(newFd, data, 0, chunk);
+          fs.writeSync(this.fd, data, 0, chunk, this.currentPosition);
+          c += chunk;
+          this.currentPosition += chunk;
+        }
+        fs.closeSync(newFd);
+        return [offset, size];
+      }
+
+      close() {
+        fs.closeSync(this.fd);
+      }
+    }
 
     JPAK.Classes.JDS = JDS;
   }

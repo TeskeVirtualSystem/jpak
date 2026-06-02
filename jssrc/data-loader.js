@@ -33,194 +33,194 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  var inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined'); 
+  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
 
   if (!inNode) {
-    var DataLoader = function(parameters) {
-      var _this = this;
-      this.xhr = new XMLHttpRequest();
-      this.method = parameters.method || "GET";
-      this.url = parameters.url;
-      this.responseType = parameters.responseType || "arraybuffer";
-      this.partial = parameters.partial  || false;
-      this.partialFrom = parameters.partialFrom || 0;
-      this.partialTo = parameters.partialTo || 0;
-      this.fetchSize = parameters.fetchSize || false;
+    class DataLoader {
+      constructor(parameters) {
+        this.xhr = new XMLHttpRequest();
+        this.method = parameters.method || "GET";
+        this.url = parameters.url;
+        this.responseType = parameters.responseType || "arraybuffer";
+        this.partial = parameters.partial  || false;
+        this.partialFrom = parameters.partialFrom || 0;
+        this.partialTo = parameters.partialTo || 0;
+        this.fetchSize = parameters.fetchSize || false;
 
-      this.callbacks = {
-        "load" : [],
-        "error" : [],
-        "progress": []
-      };
+        this.callbacks = {
+          "load" : [],
+          "error" : [],
+          "progress": []
+        };
 
-      this.xhr.onprogress = function(e) {
-        if (e.lengthComputable && _this.onprogress !== undefined)     {  
-          var percentComplete = (( (e.loaded / e.total)*10000 ) >> 0)/100;  // Rounded percent to two decimal
-          _this._reportProgress({"loaded":e.loaded,"total":e.total,"percent": percentComplete}); 
-        } 
-      };
+        this.xhr.onprogress = (e) => {
+          if (e.lengthComputable && this.onprogress !== undefined) {
+            const percentComplete = (( (e.loaded / e.total)*10000 ) >> 0)/100;
+            this._reportProgress({"loaded":e.loaded,"total":e.total,"percent": percentComplete});
+          }
+        };
 
-      this.xhr.onload = function(e) {
-        if (this.status >= 200 && this.status < 300) {
-          if (_this.fetchSize) 
-            _this._reportLoad(parseInt(this.getResponseHeader("Content-Length")));
-          else
-            _this._reportLoad(this.response);
-        
-        } else
-          _this._reportError({"text":"Error loading file! HTTP Status Code: "+this.status,"errorcode": this.status});
-      };
+        this.xhr.onload = (e) => {
+          if (this.xhr.status >= 200 && this.xhr.status < 300) {
+            if (this.fetchSize)
+              this._reportLoad(parseInt(this.xhr.getResponseHeader("Content-Length")));
+            else
+              this._reportLoad(this.xhr.response);
+          } else
+            this._reportError({"text":"Error loading file! HTTP Status Code: "+this.xhr.status,"errorcode": this.xhr.status});
+        };
 
-      this.xhr.onreadystatechange = function(e) {
-        if (this.readyState === 4 && (this.status  < 200 || this.status >= 300)) {
-          JPAK.Tools.e("Error loading url "+_this.url+" ("+this.status+"): "+this.statusText);
-          _this._reportError({"text": this.statusText, "errorcode": this.status});
-        }
-      };
-    };
-
-    DataLoader.prototype._reportProgress = function(progress) {
-      for (var cb in this.callbacks.progress)
-        this.callbacks.progress[cb](progress); 
-      this.def.notify(progress);
-    };
-
-    DataLoader.prototype._reportError = function(error) {
-      for (var cb in this.callbacks.error)
-        this.callbacks.error[cb](error); 
-      this.def.reject(error);
-    };
-
-    DataLoader.prototype._reportLoad = function(data) {
-      for (var cb in this.callbacks.load)
-        this.callbacks.load[cb](data);
-      this.def.resolve(data);
-    };
-
-    DataLoader.prototype.start = function() {
-      if (this.fetchSize) {
-        this.method = "HEAD";
-        this.partial = false;
+        this.xhr.onreadystatechange = (e) => {
+          if (this.xhr.readyState === 4 && (this.xhr.status  < 200 || this.xhr.status >= 300)) {
+            JPAK.Tools.e("Error loading url "+this.url+" ("+this.xhr.status+"): "+this.xhr.statusText);
+            this._reportError({"text": this.xhr.statusText, "errorcode": this.xhr.status});
+          }
+        };
       }
-      this.xhr.open(this.method, this.url, true);
-      this.xhr.responseType = this.responseType;
-      if (this.partial)
-        this.xhr.setRequestHeader("Range", "bytes="+this.partialFrom+"-"+this.partialTo);
-      this.def = Q.defer();
-      this.xhr.send();
-      return this.def.promise;
-    };
 
-    DataLoader.prototype.on = function(event, cb) {
-      if (event in this.callbacks) 
-        this.callbacks[event].push(function(data) {
+      _reportProgress(progress) {
+        for (const cb of this.callbacks.progress)
+          cb(progress);
+        if (this._notify)
+          this._notify(progress);
+      }
+
+      _reportError(error) {
+        const err = error instanceof Error ? error : new Error(error.text || String(error));
+        if (error.errorcode != null) err.code = error.errorcode;
+        for (const cb of this.callbacks.error)
+          cb(err);
+        if (this._reject)
+          this._reject(err);
+      }
+
+      _reportLoad(data) {
+        for (const cb of this.callbacks.load)
           cb(data);
+        if (this._resolve)
+          this._resolve(data);
+      }
+
+      start() {
+        if (this.fetchSize) {
+          this.method = "HEAD";
+          this.partial = false;
+        }
+        this.xhr.open(this.method, this.url, true);
+        this.xhr.responseType = this.responseType;
+        if (this.partial)
+          this.xhr.setRequestHeader("Range", "bytes="+this.partialFrom+"-"+this.partialTo);
+
+        return new Promise((resolve, reject, notify) => {
+          this._resolve = resolve;
+          this._reject = reject;
+          this._notify = notify;
+          this.xhr.send();
         });
-    };
+      }
+
+      on(event, cb) {
+        if (event in this.callbacks)
+          this.callbacks[event].push(cb);
+      }
+    }
 
     JPAK.Tools.DataLoader = DataLoader;
   } else {
-    var fs = require('fs');
-    if (typeof Q === undefined)
-      Q = require('q');
+    const fs = require('fs');
 
-    var NodeDataLoader = function(parameters) {
-      var _this = this;
-      this.url = parameters.url;
-      this.partial = parameters.partial  || false;
-      this.partialFrom = parameters.partialFrom || 0;
-      this.partialTo = parameters.partialTo || 0;
-      this.fetchSize = parameters.fetchSize || false;
+    class NodeDataLoader {
+      constructor(parameters) {
+        this.url = parameters.url;
+        this.partial = parameters.partial  || false;
+        this.partialFrom = parameters.partialFrom || 0;
+        this.partialTo = parameters.partialTo || 0;
+        this.fetchSize = parameters.fetchSize || false;
 
-      this.callbacks = {
-        "load" : [],
-        "error" : []
-      };
-    };
+        this.callbacks = {
+          "load" : [],
+          "error" : []
+        };
+      }
 
-    NodeDataLoader.prototype._reportError = function(error) {
-      for (var cb in this.callbacks.error)
-        this.callbacks.error[cb](error); 
-      this.def.reject(error);
-    };
+      _reportError(error) {
+        const err = error instanceof Error ? error : new Error(error.text || String(error));
+        if (error.errorcode != null) err.code = error.errorcode;
+        for (const cb of this.callbacks.error)
+          cb(err);
+        if (this._reject)
+          this._reject(err);
+      }
 
-    NodeDataLoader.prototype._reportLoad = function(data) {
-      for (var cb in this.callbacks.load)
-        this.callbacks.load[cb](data);
-      this.def.resolve(data);
-    };
+      _reportLoad(data) {
+        for (const cb of this.callbacks.load)
+          cb(data);
+        if (this._resolve)
+          this._resolve(data);
+      }
 
-    NodeDataLoader.prototype.start = function() {
-      this.def = Q.defer();
-      var _this = this;
-      if (this.fetchSize) {
-        fs.stat(_this.url, function(err, stats) {
-          if (err) {
-            _this.def.reject(err);
-            _this._reportError({"text":"Error loading file!"+err});
-          } else {
-            _this.def.resolve(stats.size);
-            _this._reportLoad(stats.size);
-          }
-        });
-      } else {
-        (function() {
-          var def = Q.defer();
-          fs.open(_this.url, "r", function(err, fd) {
-            if (err) {
-              _this.def.reject(err);
-              def.reject(err);
-            } else
-              def.resolve(fd);
-          });
-          return def.promise;
-        })().then(function(fd) {
-          var def = Q.defer();
-          (function() {
-            var sizeDef = Q.defer();
-            if (_this.partial) {
-              sizeDef.resolve(_this.partialTo-_this.partialFrom+1);
-            } else {
-              fs.fstat(fd, function(err, stats) {
-                if (err)
-                  sizeDef.reject(err);
-                else
-                  sizeDef.resolve(stats.size);
-              });
-            }
-            return sizeDef.promise;
-          })().then(function(readsize) {
-            var loadDef = Q.defer();
-            var buffer = new Buffer(readsize);
-            var position = _this.partial ? _this.partialFrom : 0;
-            fs.read(fd, buffer, 0, readsize, position, function(err, bytesRead, buffer) {
-              if (err)
-                loadDef.reject(err);
-              else
-                loadDef.resolve(buffer);
+      start() {
+        const _this = this;
+        return new Promise((resolve, reject) => {
+          _this._resolve = resolve;
+          _this._reject = reject;
+
+          if (_this.fetchSize) {
+            fs.stat(_this.url, (err, stats) => {
+              if (err) {
+                _this._reportError({"text":"Error loading file! "+err});
+              } else {
+                _this._reportLoad(stats.size);
+              }
             });
-            return loadDef.promise;
-          }).then(function(data) {
-            def.resolve(JPAK.Tools.toArrayBuffer(data));
-            _this._reportLoad(JPAK.Tools.toArrayBuffer(data));
-          }).catch(function(err) {
-            def.reject(err);
-            _this._reportError({"text":"Error loading file!"+err});
-          });
+          } else {
+            fs.open(_this.url, "r", (err, fd) => {
+              if (err) {
+                _this._reportError({"text":"Error loading file! "+err});
+                return;
+              }
 
-          return def.promise;
+              const getSize = () => {
+                return new Promise((sizeResolve, sizeReject) => {
+                  if (_this.partial) {
+                    sizeResolve(_this.partialTo - _this.partialFrom + 1);
+                  } else {
+                    fs.fstat(fd, (err, stats) => {
+                      if (err)
+                        sizeReject(err);
+                      else
+                        sizeResolve(stats.size);
+                    });
+                  }
+                });
+              };
+
+              getSize().then((readsize) => {
+                return new Promise((loadResolve, loadReject) => {
+                  const buffer = Buffer.alloc(readsize);
+                  const position = _this.partial ? _this.partialFrom : 0;
+                  fs.read(fd, buffer, 0, readsize, position, (err) => {
+                    if (err)
+                      loadReject(err);
+                    else
+                      loadResolve(buffer);
+                  });
+                });
+              }).then((data) => {
+                _this._reportLoad(JPAK.Tools.toArrayBuffer(data));
+              }).catch((err) => {
+                _this._reportError({"text":"Error loading file! "+err});
+              });
+            });
+          }
         });
       }
 
-      return this.def.promise;
-    };
-
-    NodeDataLoader.prototype.on = function(event, cb) {
-      if (event in this.callbacks) 
-        this.callbacks[event].push(function(data) {
-          cb(data);
-        });
-    };
+      on(event, cb) {
+        if (event in this.callbacks)
+          this.callbacks[event].push(cb);
+      }
+    }
 
     JPAK.Tools.DataLoader = NodeDataLoader;
   }

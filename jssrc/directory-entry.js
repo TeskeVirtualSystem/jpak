@@ -33,16 +33,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (function() {
 
-  var inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined'); 
+  const inNode = (typeof module !== 'undefined' && typeof module.exports !== 'undefined');
 
-  var JPKDirectoryEntry = function(name, path, numfiles, directories, files, aeskey) {
-    this.name = name || "";
-    this.path = path || "";
-    this.numfiles = numfiles || 0;
-    this.directories = directories || {};
-    this.aeskey = aeskey || "";
-    this.files = files || {};    
-  };
+  class JPKDirectoryEntry {
+    constructor(name, path, numfiles, directories, files, aeskey) {
+      this.name = name || "";
+      this.path = path || "";
+      this.numfiles = numfiles || 0;
+      this.directories = directories || {};
+      this.aeskey = aeskey || "";
+      this.files = files || {};
+    }
+  }
 
   JPKDirectoryEntry.prototype.toObject = JPAK.Generics.genericToObject;
   JPKDirectoryEntry.prototype.fromObject = JPAK.Generics.genericFromObject;
@@ -51,14 +53,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
   if (inNode) {
 
-    var fs = require("fs");
-    var path = require("path");
+    const fs = require("fs");
+    const path = require("path");
 
     JPKDirectoryEntry.prototype.fromDirectory = function(folder, jds) {
-      if(fs.lstatSync(folder).isDirectory()) {
-        var folders = fs.readdirSync(folder);
-        for (var fn in folders) {
-          var f = folders[fn];
+      if (fs.lstatSync(folder).isDirectory()) {
+        const folders = fs.readdirSync(folder);
+        for (const fn in folders) {
+          const f = folders[fn];
           if (fs.lstatSync(folder+"/"+f).isFile()) {
             this.addFile(folder+"/"+f, jds);
           } else if (fs.lstatSync(folder+"/"+f).isDirectory()) {
@@ -74,7 +76,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     JPKDirectoryEntry.prototype.addFile = function(filepath, jds, normalizeName) {
       console.log(" Adding "+(normalizeName ? path.basename(filepath) : filepath)+" to "+this.name);
-      var addedData = jds.addFromFile(filepath);
+      const addedData = jds.addFromFile(filepath);
       this.files[path.basename(filepath)] = new JPAK.Classes.JPKFileEntry(path.basename(filepath), normalizeName ? path.basename(filepath) : filepath, addedData[0], addedData[1], "", false, jds.name);
       this.numfiles++;
     };
