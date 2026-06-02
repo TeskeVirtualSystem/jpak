@@ -1,52 +1,65 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-'''
-     _ ____   _    _  __        ____    ___  
-    | |  _ \ / \  | |/ / __   _|___ \  / _ \ 
+r'''
+     _ ____   _    _  __        ____    ___
+    | |  _ \ / \  | |/ / __   _|___ \  / _ \
  _  | | |_) / _ \ | ' /  \ \ / / __) || | | |
 | |_| |  __/ ___ \| . \   \ V / / __/ | |_| |
- \___/|_| /_/   \_\_|\_\   \_/ |_____(_)___/ 
-                                                
-Multiuse Javascript Package 
+ \___/|_| /_/   \_\_|\_\   \_/ |_____(_)___/
+
+Multiuse Javascript Package
 By: Lucas Teske
 https://github.com/TeskeVirtualSystem/jpak
 
 '''
-import struct, os, json, sys, zlib, md5, base64
-from Crypto import Random
+import struct
+import os
+import json
+import sys
+import zlib
+import hashlib
+import base64
+
+from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
 BLOCK_SIZE = 16 * 1024 * 1024   #   16 MB
 
+
 def GenKey(base=None):
     '''
         Generates a 32 byte random key and does an xorpad with base
     '''
-    if base == None:
-        base = "\x00"*32
-    rnd = Random.new()
-    key = rnd.read(32)
+    if base is None:
+        base = b"\x00" * 32
+    key = get_random_bytes(32)
     key = MergeKeys(key, base)
     return key
+
 
 def B64E(data):
     '''
         Encodes data using base64
     '''
-    return base64.b64encode(data)
+    return base64.b64encode(data).decode('ascii')
+
 
 def B64D(data):
     '''
         Decodes data using base64
     '''
+    if isinstance(data, str):
+        data = data.encode('ascii')
     return base64.b64decode(data)
+
 
 def MergeKeys(key0, key1):
     '''
         Merge key0 and key1 with XOR/MOD
     '''
-    return MOD(XOR(key0, key1), key1) 
+    return MOD(XOR(key0, key1), key1)
+
 
 def EncryptCTR(data, key, ctr=None):
     '''
@@ -54,14 +67,15 @@ def EncryptCTR(data, key, ctr=None):
         Auto-pads the key for 32 bytes or crop the key
     '''
     if len(key) < 32:
-        key += "\x00"*(32-len(key))
+        key += b"\x00" * (32 - len(key))
     elif len(key) >= 32:
         key = key[:32]
-    key = str(key)
-    if ctr == None:
+
+    if ctr is None:
         ctr = Counter.new(nbits=128)
     encryptor = AES.new(key, AES.MODE_CTR, counter=ctr)
     return encryptor.encrypt(data), ctr
+
 
 def DecryptCTR(data, key, ctr=None):
     '''
@@ -69,15 +83,15 @@ def DecryptCTR(data, key, ctr=None):
         Auto-pads the key for 32 bytes or crop the key
     '''
     if len(key) < 32:
-        key += "\x00"*(32-len(key))
+        key += b"\x00" * (32 - len(key))
     elif len(key) >= 32:
         key = key[:32]
 
-    key = str(key)
-    if ctr == None:
+    if ctr is None:
         ctr = Counter.new(nbits=128)
     encryptor = AES.new(key, AES.MODE_CTR, counter=ctr)
     return encryptor.decrypt(data), ctr
+
 
 def XOR(data, xorpad):
     '''
@@ -87,8 +101,9 @@ def XOR(data, xorpad):
     xorpad = bytearray(xorpad)
     xl = len(xorpad)
     for i in range(len(data)):
-        data[i] ^= xorpad[i%xl]
-    return data
+        data[i] ^= xorpad[i % xl]
+    return bytes(data)
+
 
 def MOD(data, modpad):
     '''
@@ -98,8 +113,9 @@ def MOD(data, modpad):
     modpad = bytearray(modpad)
     xl = len(modpad)
     for i in range(len(data)):
-        data[i] %= modpad[i%xl] if modpad[i%xl] != 0 else 256
-    return data
+        data[i] %= modpad[i % xl] if modpad[i % xl] != 0 else 256
+    return bytes(data)
+
 
 def ADD(data, addpad):
     '''
@@ -109,8 +125,9 @@ def ADD(data, addpad):
     addpad = bytearray(addpad)
     xl = len(addpad)
     for i in range(len(data)):
-        data[i] += addpad[i%xl]
-    return data
+        data[i] += addpad[i % xl]
+    return bytes(data)
+
 
 def Compress(data):
     '''
@@ -118,24 +135,27 @@ def Compress(data):
     '''
     return zlib.compress(data)
 
+
 def Uncompress(data):
     '''
         Uncompresses data using zlib
     '''
     return zlib.decompress(data)
 
-def MD5Sum(data, hash=None):
+
+def MD5Sum(data, chash=None):
     '''
-        if hash == None, returns the data MD5Sum
-        if hash != None, returns data md5sum == hash
+        if chash == None, returns the data MD5Sum
+        if chash != None, returns data md5sum == chash
     '''
-    m = md5.new()
+    m = hashlib.md5()
     m.update(data)
     hash_t = m.hexdigest().upper()
-    if hash != None:
-        return hash.upper() == hash_t
+    if chash is not None:
+        return chash.upper() == hash_t
     else:
-        return hash
+        return hash_t
+
 
 def GetFileTable(volume, ver=2, key=None, compress=None):
     '''
@@ -144,93 +164,99 @@ def GetFileTable(volume, ver=2, key=None, compress=None):
     '''
     if ver == 1:
         volume.seek(-4, 2)
-        filetableoffset = struct.unpack("<I",volume.read(4))[0]
-        volume.seek(0,2)
+        filetableoffset = struct.unpack("<I", volume.read(4))[0]
+        volume.seek(0, 2)
         size = volume.tell()
         volume.seek(filetableoffset)
-        filetable = volume.read(size-filetableoffset-4) 
+        filetable = volume.read(size - filetableoffset - 4)
         volume.seek(0)
-        return json.loads(filetable)   
+        return json.loads(filetable)
     elif ver == 2:
         volume.seek(-4, 2)
-        filetableoffset = struct.unpack("<I",volume.read(4))[0]
+        filetableoffset = struct.unpack("<I", volume.read(4))[0]
         volume.seek(0, 2)
         size = volume.tell()
         volume.seek(0)
         volume.seek(filetableoffset)
-        filetable = volume.read(size-filetableoffset-16)
-        if key != None and key != False and key != True:
+        filetable = volume.read(size - filetableoffset - 16)
+        if key is not None and key is not False and key is not True:
             filetable, ctr = DecryptCTR(filetable, key)
         if compress:
             filetable = Uncompress(filetable)
         volume.seek(0)
-        return json.loads(filetable) 
+        return json.loads(filetable)
     else:
-        print "Unknown Version %s" %ver
+        print("Unknown Version %s" % ver)
+
 
 def GetFlags(volume):
     '''
         Returns an tuple with ProducerID, JPAK Flags, UserFlags
     '''
     volume.seek(-16, 2)
-    ProducerID, JPAKFlags, UserFlags = struct.unpack("<3I",volume.read(12))
+    ProducerID, JPAKFlags, UserFlags = struct.unpack("<3I", volume.read(12))
     volume.seek(0)
     return ProducerID, JPAKFlags, UserFlags
+
 
 def GetVolumeTable(metadata):
     '''
         Return volume table from a JMS file
     '''
-    volume.seek(-4, 2)
-    filetableoffset = struct.unpack("<I",metadata.read(4))[0]
-    metadata.seek(0xC)  #   Start of volume table
-    volumetable = metadata.read(filetableoffset-0xC-1)
+    metadata.seek(-4, 2)
+    filetableoffset = struct.unpack("<I", metadata.read(4))[0]
+    metadata.seek(0xC)
+    volumetable = metadata.read(filetableoffset - 0xC - 1)
     metadata.seek(0)
     return json.loads(volumetable)
 
+
 def ParseJPAKFlags(flags):
     return {
-        "AES"   :   ((flags&128) >> 7) == 1,
-        "ZLIB"  :   ((flags&64)  >> 6) == 1,
-        "XOR"   :   ((flags&32)  >> 5) == 1,
-        "F"     :   ((flags&16)  >> 4) == 1
+        "AES":   ((flags & 128) >> 7) == 1,
+        "ZLIB":  ((flags & 64)  >> 6) == 1,
+        "XOR":   ((flags & 32)  >> 5) == 1,
+        "F":     ((flags & 16)  >> 4) == 1
     }
 
-def GenJPAKFlags(_AES = False, _ZLIB = False, _XOR = False, _F = False):
+
+def GenJPAKFlags(_AES=False, _ZLIB=False, _XOR=False, _F=False):
     return (1 if _AES else 0) << 7 | (1 if _ZLIB else 0) << 6 | (1 if _XOR else 0) << 5 | (1 if _F else 0) << 4
+
 
 def AddToVolume(filepath, volume, key=None, compress=False):
     '''
         Add File to volume
-        Return: (offset, size)
+        Return: (offset, size, md5)
     '''
     f = open(filepath, "rb")
-    f.seek(0,2)
+    f.seek(0, 2)
     fsize = f.tell()
     f.seek(0)
     dread = 0
 
     ctr = None
 
-    m = md5.new()
+    m = hashlib.md5()
 
     offset = volume.tell()
-    while dread < fsize: 
-        readlen = BLOCK_SIZE if (fsize-dread) > BLOCK_SIZE else (fsize-dread) 
+    while dread < fsize:
+        readlen = BLOCK_SIZE if (fsize - dread) > BLOCK_SIZE else (fsize - dread)
         data = f.read(readlen)
         m.update(data)
 
-        if compress == True:                                #   Compress if asked
+        if compress is True:
             data = Compress(data)
 
-        if key != None and key != False:                     #   Encrypt if has key
+        if key is not None and key is not False:
             data, ctr = EncryptCTR(data, key, ctr)
-            
+
         volume.write(data)
         dread += readlen
 
     f.close()
-    return offset, volume.tell()-offset,  m.hexdigest().upper()
+    return offset, volume.tell() - offset, m.hexdigest().upper()
+
 
 def AddDataToVolume(data, volume, key=None, compress=False):
     '''
@@ -238,56 +264,58 @@ def AddDataToVolume(data, volume, key=None, compress=False):
         Return: (offset, size)
     '''
     offset = volume.tell()
-    
-    if compress == True:
+
+    if compress is True:
         data = Compress(data)
 
-    if key != None:
+    if key is not None:
         data, ctr = EncryptCTR(data, key)
 
     volume.write(data)
-    return offset, volume.tell()-offset
-    
-    
+    return offset, volume.tell() - offset
+
+
 def mkdir(path):
     '''
         Creates a dir.
     '''
-    print "Creating dir %s" %path
+    print("Creating dir %s" % path)
     try:
         os.mkdir(path)
-    except:
+    except Exception:
         pass
 
-def ProcessFolder(entry,volume,root,version=2,compress=False):
+
+def ProcessFolder(entry, volume, root, version=2, compress=False):
     '''
         Process a Folder entry
     '''
     if version == 1:
-        root = root + entry["name"] +"/"
-        ProcessFiles(entry["files"], volume, root, version )
+        root = root + entry["name"] + "/"
+        ProcessFiles(entry["files"], volume, root, version)
         for directory in entry["directories"]:
-            mkdir(os.path.join(root,entry["directories"][directory]["name"])) 
-            ProcessFolder(entry["directories"][directory],volume,root,version,compress)
+            mkdir(os.path.join(root, entry["directories"][directory]["name"]))
+            ProcessFolder(entry["directories"][directory], volume, root, version, compress)
     elif version == 2:
-        root = root + entry["name"] +"/"
-        if entry["key"] == True:
-            print "Cannot decrypt folder %s" %root
+        root = root + entry["name"] + "/"
+        if entry["key"] is True:
+            print("Cannot decrypt folder %s" % root)
             return
         else:
             ProcessFiles(entry["files"], volume, root, version, entry["key"], compress)
             for directory in entry["directories"]:
-                mkdir(os.path.join(root,entry["directories"][directory]["name"])) 
-                ProcessFolder(entry["directories"][directory],volume,root,version,compress)
-        
-def ProcessFiles(entry,volume,root,version=2,rootkey=None,compress=False):
+                mkdir(os.path.join(root, entry["directories"][directory]["name"]))
+                ProcessFolder(entry["directories"][directory], volume, root, version, compress)
+
+
+def ProcessFiles(entry, volume, root, version=2, rootkey=None, compress=False):
     '''
         Process Files Entries
     '''
     if version == 1:
         for file in entry:
-            filepath = os.path.join(root,entry[file]["name"])
-            print "Extracting file %s" %filepath
+            filepath = os.path.join(root, entry[file]["name"])
+            print("Extracting file %s" % filepath)
             f = open(filepath, "wb")
             volume.seek(entry[file]["offset"])
             data = volume.read(entry[file]["size"])
@@ -295,35 +323,33 @@ def ProcessFiles(entry,volume,root,version=2,rootkey=None,compress=False):
             f.close()
     elif version == 2:
         for file in entry:
-            filepath = os.path.join(root,entry[file]["name"])
-            if entry[file]["key"] == True:
-                print "Cannot decrypt file %s" %filepath
+            filepath = os.path.join(root, entry[file]["name"])
+            if entry[file]["key"] is True:
+                print("Cannot decrypt file %s" % filepath)
                 return
             else:
-                if entry[file]["key"] == None or entry[file]["key"] == False:
+                if entry[file]["key"] is None or entry[file]["key"] is False:
                     filekey = None
-                elif rootkey == None:
+                elif rootkey is None:
                     filekey = B64D(entry[file]["key"])
                 else:
                     filekey = MergeKeys(B64D(entry[file]["key"]), B64D(rootkey))
-                print "Extracting file %s" %filepath
+                print("Extracting file %s" % filepath)
                 f = open(filepath, "wb")
                 volume.seek(entry[file]["offset"])
                 size = entry[file]["size"]
                 wread = 0
                 ctr = None
-                m = md5.new()
+                m = hashlib.md5()
                 while wread < size:
                     readlen = BLOCK_SIZE if (size - wread) > BLOCK_SIZE else (size - wread)
                     data = volume.read(readlen)
-                    if filekey != None:
+                    if filekey is not None:
                         data, ctr = DecryptCTR(data, filekey, ctr)
                     if compress:
                         data = Uncompress(data)
                     m.update(data)
                     f.write(data)
                     wread += readlen
-                print "HASH: %s" %("OK" if m.hexdigest().upper()==entry[file]["md5"] else "FAIL")
+                print("HASH: %s" % ("OK" if m.hexdigest().upper() == entry[file]["md5"] else "FAIL"))
                 f.close()
-
-    
