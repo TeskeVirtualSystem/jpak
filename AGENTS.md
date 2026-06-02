@@ -58,13 +58,19 @@ npm version patch|minor|major   # bumps version + creates git tag
 git push --follow-tags          # triggers publish workflow
 ```
 
+**IMPORTANT: Never delete an existing git tag that has already been pushed/deployed.**
+Deleting and re-creating a tag that triggered a publish workflow corrupts the release history
+and may break downstream consumers relying on the immutable tag reference.
+If `npm version` already created the tag, push it as-is. If the tag already exists from
+a prior deploy, bump to the next version instead of reusing it.
+
 ## Architecture notes
 
 - `JPAK` global namespace split into `JPAK.Constants`, `JPAK.Generics`, `JPAK.Loader`, `JPAK.Classes`, `JPAK.Tools`
 - File loading uses `Range` HTTP headers for partial reads (browser XHR) or `fs.read` with offset (Node)
 - GZIP decompression code forked from JSXGraph, in `jssrc/zip.js`
 - Verbosity controlled via `JPAK.Constants.verbosity` (0 error, 3 debug)
-- C++ build: `make` in `cpp/` produces `libjpak.so` (requires `libcurl`, `libjsoncpp`)
+- C++ build: `make` in `cpp/` produces `libjpak.so` (jsoncpp compiled from submodule, no system deps)
 
 ## Testing
 
