@@ -48,8 +48,14 @@ python3 tools/unpacker.py file.jpak       # extract any JPAK file
 ## CI / Publishing
 
 - `ci.yml` — runs lint + test on push/PR to master (Node 18/20/22 matrix)
-- `publish.yml` — triggered by `v*` tags or manual dispatch; runs full validation then `npm publish --provenance`
-- Requires `NPM_TOKEN` secret set in GitHub repo settings (Automation token from npmjs.com)
+- `publish.yml` — triggered by `v*` tags or manual dispatch; runs full validation then `npm publish` via OIDC trusted publisher
+
+**One-time setup on npmjs.com:** Package settings → Trusted Publisher → Add GitHub Actions, fill in:
+- Owner: `TeskeVirtualSystem`
+- Repo: `jpak`
+- Workflow: `publish.yml`
+
+No tokens needed — publishing authenticates via OIDC. Provenance is auto-generated.
 
 To publish a release:
 ```sh
