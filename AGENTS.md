@@ -14,7 +14,7 @@ JavaScript loader runs in **both browser and Node.js** (detected via `typeof mod
 |------|---------|
 | `jssrc/` | JS source files (concatenated in **alphabetical order** — `alpha.js` creates `JPAK` namespace, `zzzz.js` exports it) |
 | `dist/` | Built output: `jpak.js` (UMD/CJS), `jpak.min.js` (minified UMD), `jpak.mjs` (ESM) |
-| `tools/` | `build.js` (build script), `packer.py` (JPAK 1.0), `extpacker.js` (JMS), `jpaktool.py` (shared Python lib) |
+| `tools/` | `build.js` (JS build), `packer.py` + `packer1.py` (JPAK 1.0/2.0 packers), `unpacker.py` (extract), `extpacker.js` (JMS), `jpaktool.py` (shared Python lib) |
 | `cpp/` | C++ shared library (`libjpak.so`) with jsoncpp submodule |
 | `test/` | Manual browser tests + `test_node.js` |
 
@@ -35,6 +35,15 @@ npm test                          # build + run test_node.js
 - `dist/jpak.mjs` — ES module (works with `import JPAK from 'jpak'` or `import { JPAK } from 'jpak'`)
 
 No external dependencies at runtime (Q library replaced by native Promises).
+
+## Python tools
+
+```sh
+pip install -r tools/requirements.txt    # pycryptodome
+python3 tools/packer1.py folder/          # create JPAK 1.0 package
+python3 tools/packer.py 0 0 0 "" folder/  # create JPAK 2.0 package
+python3 tools/unpacker.py file.jpak       # extract any JPAK file
+```
 
 ## Architecture notes
 
