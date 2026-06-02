@@ -20,8 +20,9 @@
     }
   },
   "files": [
-    "dist/",
-    "tools/"
+    "dist/jpak.js",
+    "dist/jpak.mjs",
+    "dist/jpak.min.js"
   ],
   "keywords": [
     "file system",
