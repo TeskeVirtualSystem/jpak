@@ -1,8 +1,10 @@
+```
      _ ____   _    _  __        ____    ___  
     | |  _ \ / \  | |/ / __   _|___ \  / _ \ 
  _  | | |_) / _ \ | ' /  \ \ / / __) || | | |
 | |_| |  __/ ___ \| . \   \ V / / __/ | |_| |
  \___/|_| /_/   \_\_|\_\   \_/ |_____(_)___/ 
+```
 
 **JPAK** is a multi-use JavaScript Package System for loading several files at once from a single package. Works in both browser and Node.js (>= 18).
 
